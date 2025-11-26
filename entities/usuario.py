@@ -6,7 +6,8 @@ def menu_usuario():
     print("2. Inserir Usuário")
     print("3. Apagar Usuário")
     print("4. Listar todos os Usuários")
-    print("5. Sair do Cadastro")
+    print("5. Inserir Usuário em Evento")
+    print("6. Sair do Cadastro")
 
     while True:
         print("\n")
@@ -16,7 +17,7 @@ def menu_usuario():
             nome = str(input('Entre com o nome do usuário:'))
             con = conexao()
             cursor = con.cursor()
-            cursor.execute('SELECT * FROM Usuario where nome: =' + str(nome))
+            cursor.execute("SELECT * FROM Usuario where nome: = %s" + str(nome,))
             resultados = cursor.fetchall()
             if not resultados:
                 print('Usuário', nome, 'não existe')
@@ -57,8 +58,29 @@ def menu_usuario():
             resultados = cursor.fetchall()
             for linha in resultados:
                 print(linha)
-    #Saída
+    #Inserir usuário em evento
         elif op == 5:
+            id_usuario = int(input("ID do usuário: "))
+            id_evento = int(input("ID do evento: "))
+            con = conexao()
+            cursor = con.cursor()
+            cursor.execute("SELECT id_usuario FROM Usuario WHERE id_usuario = %s", (id_usuario,))
+            if not cursor.fetchone():
+                print("Usuário não encontrado.")
+                con.close()
+                continue
+            cursor.execute("SELECT id_evento FROM Eventos WHERE id_evento = %s", (id_evento,))
+            if not cursor.fetchone():
+                print("Evento não encontrado.")
+                con.close()
+                continue
+            # Insere na tabela intermediária
+            cursor.execute("INSERT INTO Usuario_Eventos (id_usuario, id_evento) VALUES (%s, %s)", (id_usuario, id_evento))
+            con.commit()
+            con.close()
+            print("Usuário adicionado ao evento com sucesso!")
+    #Saída
+        elif op == 6:
             print("Saindo...")
             break
         else:
