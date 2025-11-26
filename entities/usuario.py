@@ -10,11 +10,9 @@ def menu_usuario():
         print("5. Inserir Usuário em Evento")
         print("6. Sair do Cadastro")
 
-        while True:
-            print("\n")
-            op = int(input('Entre com a sua opção:'))
+        op = int(input('Entre com a sua opção:'))
         #Busca
-            if op == 1:
+        if op == 1:
                 nome = str(input('Entre com o nome do usuário:'))
                 con = conexao()
                 cursor = con.cursor()
@@ -27,11 +25,19 @@ def menu_usuario():
                     for linha in resultados:
                         print(linha)
         #Inserção
-            elif op == 2:
+        elif op == 2:
                 nome = input('Entre com o nome de usuário:')
                 email = input('Entre com o e-mail:')
                 senha = input('Entre com a senha:')
-                data_nascimento = str(input('Entre com a data de nascimento:'))
+                data_nascimento = str(input('Entre com a data de nascimento (yyyy-mm-dd):'))
+
+                con = conexao()
+                cursor = con.cursor()
+                cursor.execute("SELECT id_genero, nome FROM Genero")
+                generos = cursor.fetchall()
+                print("Gêneros disponíveis")
+                for genero in generos:
+                    print(genero)
                 genero_preferencia = input('Entre com o gênero de preferência musical:')
                 endereco = input('Entre com o endereço:')
                 comando = 'INSERT INTO Usuario (nome, email, senha, data_nascimento,genero_preferencia,endereco) VALUES(%s, %s, %s, %s, %s, %s)'
@@ -42,7 +48,7 @@ def menu_usuario():
                 con.close()
                 print('Usuario', nome, 'inserido com sucesso!')
         #Deleção
-            elif op == 3:
+        elif op == 3:
                 id_usuario = int(input('Entre com o id'))
                 con = conexao()
                 cursor = con.cursor()
@@ -52,7 +58,7 @@ def menu_usuario():
                 con.close()
                 print('Usuario', id_usuario, "deletado com sucesso!")
         #Listagem
-            elif op == 4:
+        elif op == 4:
                 con = conexao()
                 cursor = con.cursor()
                 cursor.execute("SELECT * from Usuario;")
@@ -60,7 +66,7 @@ def menu_usuario():
                 for linha in resultados:
                     print(linha)
         #Inserir usuário em evento
-            elif op == 5:
+        elif op == 5:
                 id_usuario = int(input("ID do usuário: "))
                 id_evento = int(input("ID do evento: "))
                 con = conexao()
@@ -81,8 +87,8 @@ def menu_usuario():
                 con.close()
                 print("Usuário adicionado ao evento com sucesso!")
         #Saída
-            elif op == 6:
-                print("Saindo...")
-                break
-            else:
-                print("Opção inválida. Tente novamente.")
+        elif op == 6:
+            print("Saindo...")
+            break
+        else:
+            print("Opção inválida. Tente novamente.")
