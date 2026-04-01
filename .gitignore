@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Env
+.venv/
+
+# IDE
+.idea/
+
+# DB local
+starsea.db
