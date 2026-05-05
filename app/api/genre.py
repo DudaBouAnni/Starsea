@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database.session import SessionLocal
+from app.exceptions.ConflictException import ConflitException
+from app.exceptions.NotFoundException import NotFoundException
 from app.models.genre import Genre
 from app.schemas.artist import ArtistResponse
 from app.schemas.genre import GenreResponse, GenreCreate, GenreUpdate
@@ -25,6 +27,16 @@ def create_genre(
         - **genre_name**: recebe nome do gênero
 
     """
+
+    #Busca event pelo genre_name
+    exists = db.query(Genre).filter_by(
+        event_name = genre.genre_name
+    ).first()
+
+    #Verifica se genre já existe
+    if exists:
+        raise ConflitException("Genre already exists")
+
     db_genre = Genre(**genre.model_dump())
     db.add(db_genre)
     db.commit()
@@ -61,7 +73,7 @@ def get_genre_artists(
     genre = db.get(Genre, genre_id)
 
     if not genre:
-        raise HTTPException(status_code=404, detail="Genre not found")
+        raise NotFoundException("Genre not found")
 
     return genre.artists
 
@@ -82,7 +94,7 @@ def update_genre(
     genre = db.get(Genre, genre_id)
 
     if not genre:
-        raise HTTPException(status_code=404, detail="Genre does not exist")
+        raise NotFoundException("Genre does not exist")
 
     update_genre = updated_data.model_dump(exclude_unset=True)
 
@@ -110,7 +122,7 @@ def delete_genre(
     genre = db.get(Genre, genre_id)
 
     if not genre:
-        raise HTTPException(status_code=404, detail="Genre does not exist")
+        raise NotFoundException("Genre does not exist")
 
     genre.users.clear()
     genre.artists.clear()

@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database.session import SessionLocal
+from app.exceptions.BadRequestException import BadRequestException
+from app.exceptions.ConflictException import ConflitException
+from app.exceptions.NotFoundException import NotFoundException
 from app.models import Event
 from app.models.genre import Genre
 from app.models.user import User
@@ -78,11 +81,11 @@ def add_genre_user(
 
     #Verifica se user e/ou genre existe no db
     if not user or not genre:
-        raise HTTPException(status_code=404, detail="User or Genre does not exist")
+        raise NotFoundException("User or Genre does not exist")
 
     #Verifica se user já tem esse genre associado
     if genre in user.genres:
-        return {"message": "Genre already added"}
+        return ConflitException("Genre already exists")
 
     user.genres.append(genre)
 
@@ -107,7 +110,7 @@ def get_user_genres(
     user = db.get(User, user_id)
 
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise NotFoundException("User not found")
 
     return user.genres
 
@@ -131,7 +134,7 @@ def add_event_user(
 
     #Verifica se user e/ou event existe no db
     if not user or not event:
-        raise HTTPException(status_code=404, detail="User or Event does not exist")
+        raise NotFoundException("User or Event does not exist")
 
     #Verifica se user já tem esse event associado
     if event in user.events:
@@ -161,7 +164,7 @@ def get_user_events(
     user = db.get(User, user_id)
 
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise NotFoundException("User not found")
 
     return user.events
 
@@ -184,7 +187,7 @@ def update_user(
     user = db.get(User, user_id)
 
     if not user:
-        raise HTTPException(status_code=404, detail="User does not exist")
+        raise NotFoundException("User does not exist")
 
     update_user = updated_data.model_dump(exclude_unset=True)
 
@@ -214,7 +217,7 @@ def delete_user(
     user = db.get(User, user_id)
 
     if not user:
-        raise HTTPException(status_code=404, detail="User does not exist")
+        raise NotFoundException("User does not exist")
 
     user.genres.clear()
     user.events.clear()
@@ -246,11 +249,11 @@ def delete_genre_user(
 
     #Verifica se user e/ou genre existem no db
     if not user or not genre:
-        raise HTTPException(status_code=404, detail="User or Genre does not exist")
+        raise NotFoundException("User or Genre does not exist")
 
     #Verifica de genre está na lista de genres do usuário
     if genre not in user.genres:
-        raise HTTPException(status_code=404, detail="Genre not linked")
+        raise BadRequestException("Genre not linked")
 
     user.genres.remove(genre)
 

@@ -1,10 +1,13 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
 
 from app.database.session import SessionLocal
+from app.exceptions.BadRequestException import BadRequestException
+from app.exceptions.ConflictException import ConflitException
+from app.exceptions.NotFoundException import NotFoundException
 from app.models import Artist, event
 from app.models.event import Event
 from app.schemas.event import EventResponse, EventCreate, EventUpdate
@@ -38,7 +41,7 @@ def create_event(
 
     #Verifica se a event_date não está no passado
     if event.event_date < date.today():
-        raise HTTPException(400, "Event date cannot be in the past" )
+        raise BadRequestException("Event date cannot be in the past")
 
     #Busca event pelo event_name
     exists = db.query(Event).filter_by(
@@ -47,7 +50,7 @@ def create_event(
 
     #Verifica se event já existe no db
     if exists:
-        raise HTTPException(400, "Event already exists")
+        raise ConflitException("Event already exists")
 
     db_event = Event(
         event_name=event.event_name,
@@ -72,10 +75,7 @@ def create_event(
 
 
         if not artist:
-            raise HTTPException(
-                status_code= 400,
-                detail=f"Artist '{artist_name}' does not exist"
-            )
+            raise NotFoundException("Artist '{artist_name}' does not exist")
 
         artist_objetcs.append(artist)
 
@@ -142,11 +142,11 @@ def add_artist_event(
 
     #Excessão evento/artista existe no db
     if not event or not artist:
-        raise HTTPException(400, "Event or artist does not exist")
+        raise ConflitException("Event or artist does not exist")
 
     #Excessão artista repetido
     if artist in event.artists:
-        raise HTTPException(400, "Artist already in event")
+        raise ConflitException("Artist already in event")
 
     event.artists.append(artist)
 
@@ -180,7 +180,7 @@ def update_event(
 
     #Verifica se evento existe no db
     if not event:
-        raise HTTPException(status_code=404, detail="Event does not exist")
+        raise NotFoundException("Event does not exist")
 
     update_event = updated_data.model_dump(exclude_unset=True)
 
@@ -210,7 +210,7 @@ def delete_event(
     event = db.get(Event, event_id)
 
     if not event:
-        raise HTTPException(status_code=404, detail="Event does not exist")
+        raise NotFoundException("Event does not exist")
 
     event.artists.clear()
 
@@ -243,12 +243,12 @@ def remove_artist_event(
     #Verifica se evento e/ou artista existe no db
 
     if not event or not artist:
-        raise HTTPException(status_code=404, detail="Event or Artist does not exist")
+        NotFoundException("Event or Artist does not exist")
 
     #
 
     if artist not in event.artists:
-        raise HTTPException(status_code=400, detail="Artist not linked to this event")
+        raise NotFoundException("Artist not linked to this event")
 
     event.artists.remove(artist)
 

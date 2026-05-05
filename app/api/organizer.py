@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends
 from app.database.session import SessionLocal
+from app.exceptions.ConflictException import ConflitException
+from app.exceptions.NotFoundException import NotFoundException
 from app.models.organizer import Organizer
 from app.schemas.event import EventResponse
 from app.schemas.organizer import OrganizerCreate, OrganizerResponse, OrganizerUpdate
@@ -26,6 +27,15 @@ def create_organizer(
         - **organizer_name**: recebe nome do organizador
 
     """
+
+    # Busca event pelo organizer_name
+    exists = db.query(Organizer).filter_by(
+        event_name=organizer.organizer_name
+    ).first()
+
+    if exists:
+        raise ConflitException("Organizer already exists")
+
     db_organizer = Organizer(
         organizer_name=organizer.organizer_name
     )
@@ -66,7 +76,7 @@ def get_organizer_events (
 
     #Verifica se organizer existe
     if not organizer:
-        raise HTTPException(status_code=404, detail="Organizer not found")
+        raise NotFoundException("Organizer does not exist")
 
     return organizer.events
 
@@ -88,7 +98,7 @@ def update_organizer(
 
     #Verifica se organizador existe no db
     if not organizer:
-        raise HTTPException(status_code=404, detail="Organizer does not exist")
+        raise NotFoundException("Organizer does not exist")
 
     update_organizer = updated_data.model_dump(exclude_unset=True)
 
@@ -116,7 +126,7 @@ def delete_organizer(
     organizer = db.get(Organizer, organizer_id)
 
     if not organizer:
-        raise HTTPException(status_code=404, detail="Organizer does not exist")
+        NotFoundException("Organizer does not exist")
 
     organizer.events.clear()
 

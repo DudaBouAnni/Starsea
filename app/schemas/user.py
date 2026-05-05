@@ -18,6 +18,8 @@ class UserCreate(BaseModel):
       Schema usada para criar o usuário.
     """
     username: str
+    email: str
+    user_password: str
 
 class UserResponse(BaseModel):
     """

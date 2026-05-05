@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database.session import SessionLocal
+from app.exceptions import ValidationException
+from app.exceptions.NotFoundException import NotFoundException
 from app.models.artist import Artist
 from app.models.genre import Genre
 from app.schemas.artist import ArtistCreate, ArtistResponse, ArtistUpdate
@@ -42,9 +44,7 @@ def create_artist(
         ).first()
 
         if not genre:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Genre '{genre_name}' not found.")
+            raise NotFoundException(f"Genre '{genre_name}' does not exist.")
 
         genre_objects.append(genre)
 
@@ -90,7 +90,7 @@ def add_genre_to_artist(
 
     #Verifica se artist ou genre existe no db
     if not artist or not genre:
-        raise HTTPException(status_code=404, detail="Artist or Genre not found")
+        raise NotFoundException("Artist does not exist")
 
     artist.genres.append(genre)
 
@@ -111,7 +111,7 @@ def get_artist_events(
     artist = db.get(Artist, artist_id)
 
     if not artist:
-        raise HTTPException(status_code=404, detail="Artist not found")
+        raise NotFoundException("Artist not found")
 
     return artist.events
 
@@ -136,7 +136,7 @@ def update_artist(
 
     #Verifica se artist existe no db
     if not artist:
-        raise HTTPException(status_code=404, detail="Artist does not exist")
+        raise NotFoundException("Artist does not exist")
 
     update_artist = updated_data.model_dump(exclude_unset=True)
 
@@ -166,7 +166,7 @@ def delete_artist(
 
     #Verifica se artist existe no db
     if not artist:
-        raise HTTPException(status_code=404, detail="Artist does not exist")
+        raise NotFoundException("Artist does not exist")
 
     artist.genres.clear()
 
@@ -196,11 +196,11 @@ def remove_genre_artist(
 
     #Verifica se artist ou genre existem no db
     if not artist or not genre:
-        raise HTTPException(status_code=404, detail="Artist or Genre does not exist")
+        raise NotFoundException("Artist or Genre does not exist")
 
     #Verifica se genre está atrelado ao artist
     if genre not in artist.genres:
-        raise HTTPException(status_code=400, detail="Genre not linked to this artist")
+        raise ValidationException("Genre not linked to this artist")
 
     artist.genres.remove(genre)
 

@@ -1,8 +1,13 @@
 from sqlalchemy import create_engine
+from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker
+import os
 
-#URL da conexão local com mysql (teste)
-DATABASE_URL = "mysql+pymysql://root:toor@localhost/starsea"
+load_dotenv()
+
+#URL do banco de dados
+DATABASE_URL = os.getenv("DATABASE_URL")
+engine = create_engine(DATABASE_URL)
 
 #Criando conexão com o banco de dados
 engine = create_engine(DATABASE_URL)
