@@ -1,6 +1,7 @@
 """
-Pacote de modelos do banco de dados Starsea.
-Contém os modelos principais e tabelas associativas.
+Starsea database models package.
+
+Contains the main models and association tables.
 """
 
 from .user import User

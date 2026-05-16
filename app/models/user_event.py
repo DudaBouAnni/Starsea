@@ -2,17 +2,18 @@ from sqlalchemy import Table, Column, Integer, ForeignKey
 from app.database.base import Base
 
 """
-Tabela associativa entre User e Event.
+Association table between User and Event.
 
-Responsável por implementar a relação many-to-many entre usuários e eventos.
-Cada registro representa a associação entre um usuário e um evento.
+Responsible for implementing the many-to-many relationship between users and events.
+Each record represents the association between a user and an event.
+
 """
 user_event = Table(
 
     "user_event",
     Base.metadata,
-    #ID do usuário
+    #User ID
     Column("user_id", Integer, ForeignKey("users.user_id"), primary_key=True),
-    #ID do evento
+    #Event ID
     Column("event_id", Integer, ForeignKey("events.event_id"), primary_key=True)
 )

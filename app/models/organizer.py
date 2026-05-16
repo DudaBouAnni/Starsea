@@ -5,19 +5,19 @@ from app.database.base import Base
 
 class Organizer(Base):
     """
-    Modelo que representa um organizador no banco de dados.
+    Model representing an organizer in the database.
 
-    Um organizador pode:
-    - Possuir vários eventos (many-to-many)
+    An organizer can:
+    - Have multiple events (many-to-many)
 
     """
     __tablename__ = "organizers"
 
-    #Atributos da entidade
+    #Entity attributes
     organizer_id = Column(Integer, primary_key=True, index=True)
     organizer_name = Column(String(255), nullable=False)
 
-    #Relação com o event
+    #Relationship with event
     events = relationship(
         "Event",
         back_populates="organizer")

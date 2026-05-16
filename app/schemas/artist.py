@@ -9,24 +9,19 @@ from app.schemas.genre import GenreResponse
 
 class ArtistBase(BaseModel):
     """
-        Schema base do artista.
+    Base artist schema.
 
-        Contém os campos utilizados nos schemas de criação,
-        retorno e atualização de artistas.
+    Contains the fields used in artist creation, response, and update schemas.
     """
     artist_name: str
 
 class ArtistCreate(ArtistBase):
-    """
-        Schema usada para criar o artista.
-    """
+    #Schema used to create an artist.
     artist_name: str
     genres: list[str] = []
 
 class ArtistResponse(ArtistBase):
-    """
-        Schema usada ao requisitar informações do artista.
-    """
+    #Schema used when requesting artist information.
     artist_id: int
     artist_name: str
     genres: List[GenreResponse]
@@ -36,8 +31,8 @@ class ArtistResponse(ArtistBase):
 
 class ArtistUpdate(BaseModel):
     """
-        Schema usada para atualizar um artista existente.
-        Todos os campos são opcionais
+    Schema used to update an existing artist.
+    All fields are optional.
     """
     artist_name: Optional[str] = None
 

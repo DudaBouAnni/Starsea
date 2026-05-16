@@ -21,34 +21,34 @@ def get_db():
     finally:
         db.close()
 
-#Insere event
+#Creates event
 @router.post("/", response_model=EventResponse)
 def create_event(
         event: EventCreate,
         db: Session = Depends(get_db)):
     """
-        Cria um novo evento no banco de dados:
+        Creates a new event in the DB:
 
-        - **event_name**: recebe nome do evento
-        - **event_description**: recebe descrição do evento
-        - **event_date**: recebe a data do evento
-        - **ticket_link**: recebe link do site oficial de vendas de ingresso do evento
-        - **event_location**: recebe a localização do evento
-        - **organizer_id**: recebe o id do organizador do evento
-        - **artists:** recebe lista de nomes de artistas que irão fazer parte do evento
+        - **event_name**: receives event name
+        - **event_description**: receives event description
+        - **event_date**: receives event date
+        - **ticket_link**: receives official ticket sales website link for the event
+        - **event_location**: receives event location
+        - **organizer_id**: receives event organizer ID
+        - **artists**: receives a list of the artists participating in the event
 
     """
 
-    #Verifica se a event_date não está no passado
+    #Checks if event date is not in the past
     if event.event_date < date.today():
         raise BadRequestException("Event date cannot be in the past")
 
-    #Busca event pelo event_name
+    #Finds event by name
     exists = db.query(Event).filter_by(
         event_name = event.event_name
     ).first()
 
-    #Verifica se event já existe no db
+    #Checks if event already exists in the DB
     if exists:
         raise ConflitException("Event already exists")
 
@@ -65,7 +65,7 @@ def create_event(
     db.commit()
     db.refresh(db_event)
 
-    #Procura artist na lista de algum event
+    #Checks if the artist is in any event
     artist_objetcs = []
 
     for artist_name in event.artists:
@@ -85,66 +85,66 @@ def create_event(
 
     return db_event
 
-#Retorna todos os events
+#Lists all events
 @router.get("/", response_model=List[EventResponse])
 def list_events(
         db: Session = Depends(get_db)):
     """
-            Retorna todos os eventos cadastrados no banco de dados:
+            Returns the following information for all events registered in the DB:
 
-            - **event_name**: retorna nome do evento
-            - **event_description**: retorna descrição do evento
-            - **event_date**: retorna a data do evento
-            - **ticket_link**: retorna link do site oficial de vendas de ingresso do evento
-            - **event_location**: retorna a localização do evento
-            - **organizer_id**: retorna o id do organizador do evento
-            - **artists:** retorna lista de nomes de artistas que irão fazer parte do evento
+            - **event_name**: returns event name
+            - **event_description**: returns event description
+            - **event_date**: returns event date
+            - **ticket_link**: returns official ticket sales website link for the event
+            - **event_location**: returns event location
+            - **organizer_id**: returns event organizer ID
+            - **artists**: returns a list of the artists participating in the event
 
     """
     events = db.query(Event).all()
     return events
 
-#Retorna todos os artists de um event
+#Returns all artists from an event
 @router.get("/{event_id}/artists/{artist_id}")
 def get_artist_event(
         event_id: int,
         db: Session = Depends(get_db)):
     """
-        Retorna todos os artistas de um evento:
+        Returns all artists from an event:
 
-        - **event_id**: recebeid do evento
+        - **event_id**: receives event ID
 
-        Localiza evento pelo id e retorna a lista de artistas do evento e suas informações
+        Finds event by its ID and returns the list of artists participating and their information
 
     """
 
     event = db.get(Event, event_id)
     return event.artists
 
-#Adiciona mais artists ao event
+#Adds more artists to the event
 @router.post("/{event_id}/artists/{artist_id}")
 def add_artist_event(
         event_id: int,
         artist_id: int,
         db: Session = Depends(get_db)):
     """
-            Adiciona mais artistas ao evento:
+            Adds more artists to the event:
 
-            - **event_id**: recebe id do evento
-            - **artist_id**: recebe id do artista
+            - **event_id**: receives event ID
+            - **artist_id**: receives artist ID
 
-            recebe o id do evento e recebe o id do artista, então ele adiciona o artista ao evento
+            Receives event ID and artist ID, then adds the artist to the event
 
     """
 
     event = db.get(Event, event_id)
     artist = db.get(Artist, artist_id)
 
-    #Excessão evento/artista existe no db
+    #Checks if artist and/or event exists in the DB
     if not event or not artist:
         raise ConflitException("Event or artist does not exist")
 
-    #Excessão artista repetido
+    #Checks for duplicate artist
     if artist in event.artists:
         raise ConflitException("Artist already in event")
 
@@ -154,31 +154,31 @@ def add_artist_event(
 
     return {"message": "Artist added successfully!"}
 
-#Atualiza event
+#Updates event
 @router.patch("/{event_id}")
 def update_event(
     event_id: int,
     updated_data: EventUpdate,
     db: Session = Depends(get_db)):
     """
-        Atualiza informações do evento:
+        Updates event information:
 
-        - **event_id**: recebe id do evento
-        - **event_name**: retorna nome do evento
-        - **event_description**: retorna descrição do evento
-        - **event_date**: retorna a data do evento
-        - **ticket_link**: retorna link do site oficial de vendas de ingresso do evento
-        - **event_location**: retorna a localização do evento
-        - **organizer_id**: retorna o id do organizador do evento
-        - **artists:** retorna lista de nomes de artistas que irão fazer parte do evento
+        - **event_id**: receives event ID
+        - **event_name**: returns event name
+        - **event_description**: returns event description
+        - **event_date**: returns event date
+        - **ticket_link**: returns official ticket sales website link for the event
+        - **event_location**: returns event location
+        - **organizer_id**: returns event organizer ID
+        - **artists**: returns a list of the artists participating in the event
 
-        Localiza evento pelo id e permimte alteração dos dados
+        Finds an event by its ID and allows updating his data
 
     """
 
     event = db.get(Event, event_id)
 
-    #Verifica se evento existe no db
+    #Checks if event exists in the DB
     if not event:
         raise NotFoundException("Event does not exist")
 
@@ -192,18 +192,18 @@ def update_event(
 
     return event
 
-#Deleta event
+#Deletes event
 @router.delete("/{event_id}")
 def delete_event(
         event_id: int,
         db: Session = Depends(get_db)):
 
     """
-        Deleta evento:
+        Deletes event:
 
-        - **event_id**: recebe id do evento
+        - **event_id**: receives event ID
 
-        Localiza evento pelo id e remove o do db
+        Finds event by its ID and deletes it from the DB
 
     """
 
@@ -219,7 +219,7 @@ def delete_event(
 
     return {"message": "Event deleted successfully!"}
 
-#Deleta artist de um event
+#Deletes an artist from an event
 @router.delete("/{event_id}/artists/{artist_id}")
 def remove_artist_event(
     event_id: int,
@@ -228,19 +228,19 @@ def remove_artist_event(
     ):
 
     """
-        Atualiza informações do evento:
+        Updates event information:
 
-        - **event_id**: recebe id do evento
-        - **artist_id**: recebe id do artista
+        - **event_id**: recieves the event ID
+        - **artist_id**: recieves the artist ID
 
-        Localiza evento pelo id, recebe o id do artista desejado e remove o do db
+        Finds the event by its ID, recieves the artist ID, and removes the artist from the event
 
     """
 
     event = db.get(Event, event_id)
     artist = db.get(Artist, artist_id)
 
-    #Verifica se evento e/ou artista existe no db
+    #Checks if the event and/or artist exists in the DB
 
     if not event or not artist:
         NotFoundException("Event or Artist does not exist")

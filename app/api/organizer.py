@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from app.database.session import SessionLocal
 from app.exceptions.ConflictException import ConflitException
 from app.exceptions.NotFoundException import NotFoundException
@@ -16,15 +18,15 @@ def get_db():
     finally:
         db.close()
 
-#Insere organizer
+#Creates organizer
 @router.post("/", response_model=OrganizerResponse)
 def create_organizer(
         organizer: OrganizerCreate,
         db: Session = Depends(get_db)):
     """
-       Cria um organizador no banco de dados:
+       Creates an organizer in the DB:
 
-        - **organizer_name**: recebe nome do organizador
+        - **organizer_name**: receives organizer name
 
     """
 
@@ -46,57 +48,57 @@ def create_organizer(
 
     return db_organizer
 
-#Lista todos os organizers
+#List all organizers
 @router.get("/", response_model=List[OrganizerResponse])
 def list_organizers(
     db: Session = Depends(get_db)):
     """
-        Retorna as seguintes informações de todos os organizadores cadastrados no banco de dados:
+        Returns the following information for all organizers registered in the DB:
 
-        - **organizer_name**: retorna nome do organizador
-        - **organizer_id**: retorna o id do organizador
+        - **organizer_name**: returns organizer name
+        - **organizer_id**: returns organizer ID
 
     """
     return db.query(Organizer).all()
 
-#Lista todos os eventos de algum organinzer
+#Lists all events from an organizer
 @router.get("/{organizer_id}/events", response_model=list[EventResponse])
 def get_organizer_events (
         organizer_id: int,
         db: Session = Depends(get_db)):
     """
-        Retorna todos os eventos de algum organizador:
+        Returns all os events from an organizer:
 
-        - **organizer_id**: recebe id do organizador
+        - **organizer_id**: receive organizer ID
 
-        Localiza organizador pelo id e retorna a lista de eventos do organizador
+        Finds organizer by its ID and returns the organizer's event list
 
     """
     organizer = db.get(Organizer, organizer_id)
 
-    #Verifica se organizer existe
+    #Checks if organizer exists
     if not organizer:
         raise NotFoundException("Organizer does not exist")
 
     return organizer.events
 
-#Atualiza organizer
+#Updates organizer
 @router.patch("/{organizer_id}")
 def update_organizer(
     organizer_id: int,
     updated_data: OrganizerUpdate,
     db: Session = Depends(get_db)):
     """
-        Atualiza informações do organizador:
+        Updates organizer information:
 
-        - **organizer_id**: id nome do organizador
+        - **organizer_id**: receives organizer ID
 
-        Localiza organizador pelo id e permite alterações nas informações
+        Finds organizer by its ID and allows updating its information
 
     """
     organizer = db.get(Organizer, organizer_id)
 
-    #Verifica se organizador existe no db
+    #Checks if organizer exists in the DB
     if not organizer:
         raise NotFoundException("Organizer does not exist")
 
@@ -110,17 +112,17 @@ def update_organizer(
 
     return organizer
 
-#Deleta organizer
+#Deletes organizer
 @router.delete("/{organizer_id}")
 def delete_organizer(
         organizer_id: int,
         db: Session = Depends(get_db)):
     """
-        Deleta organizador:
+        Deletes organizer:
 
-        - **organizer_id**: recebe id do organizador
+        - **organizer_id**: receive organizer ID
 
-        Localiza organizador pelo id e remove o do db
+        Finds organizer by its ID and deletes it from the DB
 
     """
     organizer = db.get(Organizer, organizer_id)

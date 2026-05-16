@@ -4,35 +4,30 @@ from pydantic import BaseModel
 
 class UserBase(BaseModel):
     """
-        Schema base do usuário.
+    Base user schema.
 
-        Contém os campos utilizados nos schemas de criação,
-        retorno e atualização de usuários.
+    Contains the fields used in user creation, response, and update schemas.
     """
     username: str
     email: str
     user_password: str
 
 class UserCreate(BaseModel):
-    """
-      Schema usada para criar o usuário.
-    """
+    #Schema used to create a user.
     username: str
     email: str
     user_password: str
 
 class UserResponse(BaseModel):
-    """
-      Schema usada ao requisitar informações do usuário.
-    """
+    #Schema used when requesting user information.
     user_id: int
     username: str
     email: str
 
 class UserUpdate(BaseModel):
     """
-      Schema usada para atualizar um usuário existente.
-      Todos os campos são opcionais
+    Schema used to update an existing user.
+    All fields are optional.
     """
     username: Optional[str] = None
     email: Optional[str] = None

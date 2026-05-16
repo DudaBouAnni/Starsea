@@ -2,16 +2,17 @@ from sqlalchemy import Table, Column, Integer, ForeignKey
 from app.database.base import Base
 
 """
-Tabela associativa entre User e Genre.
+Association table between User and Genre.
 
-Responsável por implementar a relação many-to-many entre usuários e gêneros.
-Cada registro representa a associação entre um usuário e um gênero.
+Responsible for implementing the many-to-many relationship between users and genres.
+Each record represents the association between a user and a genre.
+
 """
 user_genre = Table(
     "user_genre",
     Base.metadata,
-    #ID do usuário
+    #User ID
     Column("user_id", Integer, ForeignKey("users.user_id"), primary_key=True),
-    #ID do gênero
+    #Genre ID
     Column("genre_id", Integer, ForeignKey("genres.genre_id"), primary_key=True)
 )

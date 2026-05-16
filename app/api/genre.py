@@ -16,24 +16,24 @@ def get_db():
     finally:
         db.close()
 
-#Insere genre
+#Creates genre
 @router.post("/", response_model=GenreResponse)
 def create_genre(
         genre: GenreCreate,
         db: Session = Depends(get_db)):
     """
-        Cria um novo gênro no banco de dados:
+        Creates new genre in the DB:
 
-        - **genre_name**: recebe nome do gênero
+        - **genre_name**: recieves genre name
 
     """
 
-    #Busca event pelo genre_name
+    #Finds event by genre name
     exists = db.query(Genre).filter_by(
         event_name = genre.genre_name
     ).first()
 
-    #Verifica se genre já existe
+    #Verifies if genre already exists
     if exists:
         raise ConflitException("Genre already exists")
 
@@ -43,31 +43,31 @@ def create_genre(
     db.refresh(db_genre)
     return db_genre
 
-#Retorna todos os genres
+#Lists all genres
 @router.get("/", response_model=list[GenreResponse])
 def list_genre(
         db: Session = Depends(get_db)):
     """
-        Retorna todos os gêneros cadastrados no banco de dados:
+        Returns the following information for all genres registered in the DB:
 
-        - **genre_name**: retorna nome do gênero
-        - **genre_id**: retorna id do gênereo
+        - **genre_name**: returns genre name
+        - **genre_id**: returns genre id
 
     """
     genres = db.query(Genre).all()
     return genres
 
-#Lista todos os artists de um genre
+#Lists all artists in a genre
 @router.get("/{genre_id}/artists", response_model=list[ArtistResponse])
 def get_genre_artists(
         genre_id: int,
         db: Session = Depends(get_db)):
     """
-        Retorna todos os artistas de um gênero:
+        Returns all artists from a genre:
 
-        - **genre_id**: recebe id do gênero
+        - **genre_id**: recieves id do gênero
 
-        Localiza gênero pelo id e retorna a lista de artistas do gênero e suas informações.
+        Finds genre by its ID and returns the list of artists and their information
     """
 
     genre = db.get(Genre, genre_id)
@@ -77,18 +77,18 @@ def get_genre_artists(
 
     return genre.artists
 
-#Atualiza genre
+#Updates genre
 @router.patch("/{genre_id}")
 def update_genre(
     genre_id: int,
     updated_data: GenreUpdate,
     db: Session = Depends(get_db)):
     """
-        Atualiza informações do gênero:
+        Updates genre information:
 
-        - **genre_id**: recebe id do gênero
+        - **genre_id**: recieves genre ID
 
-        Localiza gênero pelo id e permimte alteração dos dados
+        Finds the genre by its ID and allows updating its data
 
     """
     genre = db.get(Genre, genre_id)
@@ -106,17 +106,17 @@ def update_genre(
 
     return genre
 
-#Deleta genre
+#Deletes genre
 @router.delete("/{genre_id}")
 def delete_genre(
         genre_id: int,
         db: Session = Depends(get_db)):
     """
-        Deleta um gênero do banco de dados:
+        Deletes genre from the DB:
 
-        - **genre_id**: recebe id do gênero
+        - **genre_id**: receive genre ID
 
-        Localiza gênero pelo id e remove o do banco de dados.
+        Finds the genre by its ID and allows deletes it from the DB
 
     """
     genre = db.get(Genre, genre_id)

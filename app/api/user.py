@@ -18,17 +18,17 @@ def get_db():
     finally:
         db.close()
 
-#Insere user
+#Creates user
 @router.post("/", response_model=UserResponse)
 def create_user(
         user: UserCreate,
         db: Session = Depends(get_db)):
     """
-       Cria um usuário no banco de dados:
+       Creates a user in the DB:
 
-        - **username**: recebe nome do usuário
-        - **email**: recebe email do usuário
-        - **username_password**: recebe senha do usuário
+        - **username**: receives username
+        - **email**: receives user email
+        - **username_password**: receives user password
 
     """
 
@@ -44,46 +44,45 @@ def create_user(
 
     return db_user
 
-#Lista todos os users
+#Lists all users
 @router.get("/", response_model=list[UserResponse])
 def list_users(
         db: Session = Depends(get_db)):
     """
-        Retorna todos os usuários cadastrados no banco de dados:
+        Returns all users in the DB:
 
-        - **user_id**: retorna id do usuário
-        - **username**: retorna nome do usuário
-        - **email**: retorna email do usuário
+        - **user_id**: returns user ID
+        - **username**: returns username
+        - **email**: returns user email
 
     """
 
     users = db.query(User).all()
     return users
 
-#Adicionar genre ao user
+#Adds genre to user
 @router.post("/{user_id}/genres/{genre_id}")
 def add_genre_user(
         user_id: int,
         genre_id: int,
         db: Session = Depends(get_db)):
     """
-        Adiciona um novo gênero ao usuário:
+        Adds new genre to the user:
 
-        - **user_id**: recebe id do usuário
-        - **genre_id**: recebe id do gênero
+        - **user_id**: receives user ID
+        - **genre_id**: receives genre ID
 
-        Localiza usuário pelo id e insere o gênero escolhido na lista de gêneros do usuário.
-
+        Finds the user by its ID, then finds the by its ID and adds it to the user's genre list
     """
 
     user = db.get(User, user_id)
     genre = db.get(Genre, genre_id)
 
-    #Verifica se user e/ou genre existe no db
+    #Checks if user and/or genre exists in the DB
     if not user or not genre:
         raise NotFoundException("User or Genre does not exist")
 
-    #Verifica se user já tem esse genre associado
+    #Checks if user already has the genre linked
     if genre in user.genres:
         return ConflitException("Genre already exists")
 
@@ -93,17 +92,17 @@ def add_genre_user(
 
     return {"message": "Genre added successfully!"}
 
-#Retorna todos os genres de um user
+#Returns all genres from a user
 @router.get("/{user_id}/genres")
 def get_user_genres(
         user_id: int,
         db: Session = Depends(get_db)):
     """
-        Retorna todos os gêneros de algum usuário:
+        Returns all genres from a user:
 
-        - **user_id**: recebe id do usuário
+        - **user_id**: receives user ID
 
-        Localiza usuário pelo id e retorna a lista de gêneros do usuário.
+        Finds user by its ID and returns the user's genre list.
 
     """
 
@@ -114,29 +113,29 @@ def get_user_genres(
 
     return user.genres
 
-#Adicionar events ao user
+#Adds events to a user
 @router.post("/{user_id}/events/{event_id}")
 def add_event_user(
         user_id: int,
         event_id: int,
         db: Session = Depends(get_db)):
     """
-        Adiciona um novo evento ao usuário:
+        Adds new event to a user:
 
-        - **user_id**: recebe id do usuário
-        - **event_id**: recebe id do evento
+        - **user_id**: receives user ID
+        - **event_id**: receives event ID
 
-        Localiza usuário pelo id e insere o evento escolhido na lista de eventos do usuário.
+        Finds the user by its ID, then finds the event by its ID and adds it to the user's event list
 
     """
     user = db.get(User, user_id)
     event = db.get(Event, event_id)
 
-    #Verifica se user e/ou event existe no db
+    #Checks if user and/or event exists in the DB
     if not user or not event:
         raise NotFoundException("User or Event does not exist")
 
-    #Verifica se user já tem esse event associado
+    #Checks if user already has this event linked
     if event in user.events:
         return {"message": "Event already added"}
 
@@ -146,18 +145,18 @@ def add_event_user(
 
     return {"message": "Genre added successfully!"}
 
-#Retorna todos os events de um user
+#Returns all events from a user
 @router.get("/{user_id}/events")
 def get_user_events(
         user_id: int,
         db: Session = Depends(get_db)):
 
     """
-        Retorna todos os eventos de algum usuário:
+        Returns all events from a user:
 
-        - **user_id**: recebe id do usuário
+        - **user_id**: receives user ID
 
-        Localiza usuário pelo id e retorna a lista de eventos do usuário.
+        Finds user by its ID and returns the user's event list
 
     """
 
@@ -168,7 +167,7 @@ def get_user_events(
 
     return user.events
 
-#Atualiza user
+#Updates user
 @router.patch("/{user_id}")
 def update_user(
     user_id: int,
@@ -176,11 +175,11 @@ def update_user(
     db: Session = Depends(get_db)):
 
     """
-        Atualiza usuário:
+        Updates user:
 
-        - **user_id**: recebe id do usuário
+        - **user_id**: receives user ID
 
-        Localiza usuário pelo id e permite a alteração dos dados.
+        Finds user by its id and allows updating its data
 
     """
 
@@ -199,18 +198,18 @@ def update_user(
 
     return user
 
-#Deleta user
+#Deletes user
 @router.delete("/{user_id}")
 def delete_user(
         user_id: int,
         db: Session = Depends(get_db)):
 
     """
-        Deleta usuário do banco de dados:
+        Deletes user from the DB:
 
-        - **user_id**: recebe id do usuário
+        - **user_id**: receives user ID
 
-        Localiza usuário pelo id e remove o do banco de dados.
+        Finds user by its ID and deletes it from the DB
 
     """
 
@@ -227,7 +226,7 @@ def delete_user(
 
     return {"message": "User deleted successfully!"}
 
-#Deleta algum genre do user
+#Deletes a genre from a user
 @router.delete("/{user_id}/genres/{genere_id}")
 def delete_genre_user(
         user_id: int,
@@ -237,21 +236,21 @@ def delete_genre_user(
     """
         Deleta um gênero de um usuário:
 
-        - **user_id**: recebe id do usuário
-        - **genre_id**: recebe id do gênero
+        - **user_id**: receives user ID
+        - **genre_id**: receives genre ID
 
-        Localiza usuário pelo id, localiza gênero pelo id e o remove da lista de gêneros do usuário.
+        Finds user by its ID, finds genre by its ID, and removes it from the user's genre list
 
     """
 
     user = db.get(User, user_id)
     genre = db.get(Genre, genere_id)
 
-    #Verifica se user e/ou genre existem no db
+    #Checks if user and/or genre exists in the DB
     if not user or not genre:
         raise NotFoundException("User or Genre does not exist")
 
-    #Verifica de genre está na lista de genres do usuário
+    #Checks if genre is in user's genre list
     if genre not in user.genres:
         raise BadRequestException("Genre not linked")
 

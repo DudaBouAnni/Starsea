@@ -9,10 +9,9 @@ from app.schemas.organizer import OrganizerResponse
 
 class EventBase(BaseModel):
     """
-        Schema base do evento.
+    Base event schema.
 
-        Contém os campos utilizados nos schemas de criação,
-        retorno e atualização de eventos.
+    Contains the fields used in event creation, response, and update schemas.
     """
     event_name: str
     event_description: str
@@ -21,16 +20,12 @@ class EventBase(BaseModel):
     event_location: str
 
 class EventCreate(EventBase):
-    """
-        Schema usada para criar o evento.
-    """
+    #Schema used to create an event.
     organizer_id: int
     artists: list[str] = Field(default_factory=list)
 
 class EventResponse(EventBase):
-    """
-        Schema usada ao requisitar informações do evento.
-    """
+    #Schema used when requesting event information.
     event_id: int
     artists: List[ArtistResponse] = []
     organizer: OrganizerResponse
@@ -40,8 +35,8 @@ class EventResponse(EventBase):
 
 class EventUpdate(BaseModel):
     """
-        Schema usada para atualizar um evento existente.
-        Todos os campos são opcionais
+    Schema used to update an existing event.
+    All fields are optional.
     """
     event_name: Optional[str] = None
     event_description: Optional[str] = None

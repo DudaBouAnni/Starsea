@@ -2,17 +2,18 @@ from sqlalchemy import Table, Column, Integer, ForeignKey
 from app.database.base import Base
 
 """
-Tabela associativa entre Event e Artist.
+Association table between Event and Artist.
 
-Responsável por implementar a relação many-to-many entre eventos e artistas.
-Cada registro representa a associação entre um evento e um artista.
+Responsible for implementing the many-to-many relationship between events and artists.
+Each record represents the association between an event and an artist.
+
 """
 event_artist = Table(
     "event_artist",
     Base.metadata,
 
-    #ID do evento
+    #Event ID
     Column("event_id", ForeignKey("events.event_id"), primary_key=True),
-    #ID do artista
+    #Artist ID
     Column("artist_id", ForeignKey("artists.artist_id"), primary_key=True),
 )

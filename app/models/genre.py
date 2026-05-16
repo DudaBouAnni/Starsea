@@ -7,26 +7,27 @@ from app.models.user_genre import user_genre
 
 class Genre(Base):
     """
-    Modelo que representa um gênero no banco de dados.
+    Model representing a genre in the database.
 
-    Um gênero pode:
-    - Possuir vários artistas (many-to-many)
-    - Possuir vários usuários (many-to-many)
+    A genre can:
+    - Have multiple artists (many-to-many)
+    - Have multiple users (many-to-many)
+
     """
     __tablename__ = "genres"
 
-    #Atributos da entidade
+    #Entity attributes
     genre_id = Column(Integer, primary_key=True, index=True)
     genre_name = Column(String, index=True)
 
-    #Relação com artist
+    #Relationship with artist
     artists = relationship(
         "Artist",
         secondary=artist_genre,
         back_populates="genres"
     )
 
-    #Relação com user
+    #Relationship with user
     users = relationship(
         "User",
         secondary=user_genre,

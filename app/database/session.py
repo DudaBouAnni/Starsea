@@ -5,16 +5,16 @@ import os
 
 load_dotenv()
 
-#URL do banco de dados
+#Database URL
 DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 
-#Criando conexão com o banco de dados
+#Creating connection to the database
 engine = create_engine(DATABASE_URL)
 
-#Criando nova sessão local
+#Creating new local session
 SessionLocal = sessionmaker(
-    autocommit=False, #Garante que as alterações só sejam salvas quando houver commit
-    autoflush=False, #Evita flush automático, controla quando dados são enviados ao banco
-    bind=engine #Víncula a sessão a engine criada
+    autocommit=False, #Ensures that changes are only saved when a commit occurs
+    autoflush=False, #Prevents automatic flush; controls when data is sent to the database
+    bind=engine #Binds the session to the created engine
 )

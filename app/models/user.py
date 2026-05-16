@@ -7,11 +7,12 @@ from app.models.user_genre import user_genre
 
 class User(Base):
     """
-    Modelo que representa um usuário no banco de dados.
+    Model representing a user in the database.
 
-    Um usuário pode:
-    - Possuir vários eventos (many-to-many)
-    - Possuir vários gêneros (many-to-many)
+    A user can:
+    - Have multiple events (many-to-many)
+    - Have multiple genres (many-to-many)
+
     """
     __tablename__ = "users"
 
@@ -21,14 +22,14 @@ class User(Base):
     user_password = Column(String(225), unique=True, index=True)
 
 
-    #Relação com event
+    #Relationship with event
     events = relationship(
         "Event",
         secondary=user_event,
         back_populates="participants"
     )
 
-    #Relação com genre
+    #Relationship with genre
     genres = relationship(
         "Genre",
         secondary=user_genre,

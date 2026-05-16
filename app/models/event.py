@@ -6,15 +6,16 @@ from app.models.user_event import user_event
 
 class Event(Base):
     """
-    Modelo que representa um evento no banco de dados.
+    Model representing an event in the database.
 
-    Um evento pode:
-    - Possuir vários artistas (many-to-many)
-    - Possuir vários usuários (many-to-many)
+    An event can:
+    - Have multiple artists (many-to-many)
+    - Have multiple users (many-to-many)
+
     """
     __tablename__ = "events"
 
-    #Atributos da entidade
+    # Entity attributes
     event_id = Column(Integer, primary_key=True, index=True)
     event_name = Column(String(150), index=True)
     event_description = Column(String(500), index=True)
@@ -24,20 +25,20 @@ class Event(Base):
     organizer_id = Column(Integer, ForeignKey("organizers.organizer_id"))
 
 
-    #Relação com o organizer
+    #Relationship with organizer
     organizer = relationship(
         "Organizer",
         back_populates="events"
     )
 
-    #Relação com o user
+    #Relationship with user
     participants = relationship(
         "User",
         secondary=user_event,
         back_populates="events"
     )
 
-    #Relação com o artist
+    #Relationship with artist
     artists = relationship(
     "Artist",
     secondary=event_artist,

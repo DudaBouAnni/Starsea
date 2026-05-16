@@ -4,23 +4,18 @@ from pydantic import BaseModel
 
 class OrganizerBase(BaseModel):
     """
-       Schema base do organizador.
+    Base organizer schema.
 
-       Contém os campos utilizados nos schemas de criação,
-       retorno e atualização de organizadores.
+    Contains the fields used in organizer creation, response, and update schemas.
     """
     organizer_name: str
 
 class OrganizerCreate(OrganizerBase):
-    """
-       Schema usada para criar o organizador.
-    """
+    #Schema used to create an organizer.
     organizer_name: str
 
 class OrganizerResponse(OrganizerBase):
-    """
-        Schema usada ao requisitar informações do organizador.
-    """
+    #Schema used when requesting organizer information.
     organizer_id: int
 
     class Config:
@@ -28,8 +23,8 @@ class OrganizerResponse(OrganizerBase):
 
 class OrganizerUpdate(BaseModel):
     """
-        Schema usada para atualizar um organizador existente.
-        Todos os campos são opcionais
+    Schema used to update an existing organizer.
+    All fields are optional.
     """
     organizer_name: Optional[str] = None
 

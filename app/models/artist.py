@@ -7,27 +7,28 @@ from app.models.event_artist import event_artist
 class Artist(Base):
 
     """
-    Modelo que representa um artista no banco de dados.
+    Model representing an artist in the database.
 
-    Um artista pode:
-    - Fazer parte de vários eventos (many-to-many)
-    - Possuir vários gêneros musicais (many-to-many)
+    An artist can:
+    - Be part of multiple events (many-to-many)
+    - Have multiple music genres (many-to-many)
+
     """
 
     __tablename__ = "artists"
 
-    #Atributos da entidade
+    #Entity attributes
     artist_id = Column(Integer, primary_key=True, index=True)
     artist_name = Column(String, index=True)
 
-    #Relação com o event
+    #Relationship with event
     events = relationship(
         "Event",
         secondary=event_artist,
         back_populates="artists"
     )
 
-    #Relação com o genre
+    #Relationship with genre
     genres = relationship(
         "Genre",
         secondary=artist_genre,
