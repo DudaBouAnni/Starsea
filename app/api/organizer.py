@@ -9,6 +9,9 @@ from app.schemas.event import EventResponse
 from app.schemas.organizer import OrganizerCreate, OrganizerResponse, OrganizerUpdate
 from typing import List
 
+from app.services.organizer_service import create_organizer_service, list_organizers_service, \
+    get_organizer_events_service, update_organizer_service, delete_organizer_service
+
 router = APIRouter(prefix="/organizers", tags=["organizers"])
 
 def get_db():
@@ -30,23 +33,7 @@ def create_organizer(
 
     """
 
-    # Busca event pelo organizer_name
-    exists = db.query(Organizer).filter_by(
-        event_name=organizer.organizer_name
-    ).first()
-
-    if exists:
-        raise ConflitException("Organizer already exists")
-
-    db_organizer = Organizer(
-        organizer_name=organizer.organizer_name
-    )
-
-    db.add(db_organizer)
-    db.commit()
-    db.refresh(db_organizer)
-
-    return db_organizer
+    return create_organizer_service(organizer, db)
 
 #List all organizers
 @router.get("/", response_model=List[OrganizerResponse])
@@ -59,12 +46,13 @@ def list_organizers(
         - **organizer_id**: returns organizer ID
 
     """
-    return db.query(Organizer).all()
+    return list_organizers_service(db)
 
 #Lists all events from an organizer
 @router.get("/{organizer_id}/events", response_model=list[EventResponse])
 def get_organizer_events (
         organizer_id: int,
+        event_id: int,
         db: Session = Depends(get_db)):
     """
         Returns all os events from an organizer:
@@ -74,13 +62,8 @@ def get_organizer_events (
         Finds organizer by its ID and returns the organizer's event list
 
     """
-    organizer = db.get(Organizer, organizer_id)
 
-    #Checks if organizer exists
-    if not organizer:
-        raise NotFoundException("Organizer does not exist")
-
-    return organizer.events
+    return get_organizer_events_service(organizer_id, db)
 
 #Updates organizer
 @router.patch("/{organizer_id}")
@@ -96,21 +79,8 @@ def update_organizer(
         Finds organizer by its ID and allows updating its information
 
     """
-    organizer = db.get(Organizer, organizer_id)
 
-    #Checks if organizer exists in the DB
-    if not organizer:
-        raise NotFoundException("Organizer does not exist")
-
-    update_organizer = updated_data.model_dump(exclude_unset=True)
-
-    for key, value in update_organizer.items():
-        setattr(organizer, key, value)
-
-    db.commit()
-    db.refresh(organizer)
-
-    return organizer
+    return update_organizer_service(organizer_id, updated_data, db)
 
 #Deletes organizer
 @router.delete("/{organizer_id}")
@@ -125,14 +95,5 @@ def delete_organizer(
         Finds organizer by its ID and deletes it from the DB
 
     """
-    organizer = db.get(Organizer, organizer_id)
 
-    if not organizer:
-        NotFoundException("Organizer does not exist")
-
-    organizer.events.clear()
-
-    db.delete(organizer)
-    db.commit()
-
-    return {"message": "Organizer deleted successfully!"}
+    return delete_organizer_service(organizer_id, db)

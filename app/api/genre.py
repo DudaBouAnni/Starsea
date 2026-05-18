@@ -6,6 +6,8 @@ from app.exceptions.NotFoundException import NotFoundException
 from app.models.genre import Genre
 from app.schemas.artist import ArtistResponse
 from app.schemas.genre import GenreResponse, GenreCreate, GenreUpdate
+from app.services.genre_service import delete_genre_service, update_genre_service, get_genre_artists_service, \
+    list_genre_service
 
 router = APIRouter(prefix="/genres", tags=["genres"])
 
@@ -16,7 +18,7 @@ def get_db():
     finally:
         db.close()
 
-#Creates genre
+#Create Genre
 @router.post("/", response_model=GenreResponse)
 def create_genre(
         genre: GenreCreate,
@@ -28,22 +30,9 @@ def create_genre(
 
     """
 
-    #Finds event by genre name
-    exists = db.query(Genre).filter_by(
-        event_name = genre.genre_name
-    ).first()
+    return create_genre
 
-    #Verifies if genre already exists
-    if exists:
-        raise ConflitException("Genre already exists")
-
-    db_genre = Genre(**genre.model_dump())
-    db.add(db_genre)
-    db.commit()
-    db.refresh(db_genre)
-    return db_genre
-
-#Lists all genres
+#List Genres
 @router.get("/", response_model=list[GenreResponse])
 def list_genre(
         db: Session = Depends(get_db)):
@@ -54,8 +43,7 @@ def list_genre(
         - **genre_id**: returns genre id
 
     """
-    genres = db.query(Genre).all()
-    return genres
+    return list_genre_service()
 
 #Lists all artists in a genre
 @router.get("/{genre_id}/artists", response_model=list[ArtistResponse])
@@ -70,12 +58,7 @@ def get_genre_artists(
         Finds genre by its ID and returns the list of artists and their information
     """
 
-    genre = db.get(Genre, genre_id)
-
-    if not genre:
-        raise NotFoundException("Genre not found")
-
-    return genre.artists
+    return get_genre_artists_service(genre_id, db)
 
 #Updates genre
 @router.patch("/{genre_id}")
@@ -91,20 +74,8 @@ def update_genre(
         Finds the genre by its ID and allows updating its data
 
     """
-    genre = db.get(Genre, genre_id)
 
-    if not genre:
-        raise NotFoundException("Genre does not exist")
-
-    update_genre = updated_data.model_dump(exclude_unset=True)
-
-    for key, value in update_genre.items():
-        setattr(genre, key, value)
-
-    db.commit()
-    db.refresh(genre)
-
-    return genre
+    return update_genre_service(genre_id, updated_data, db)
 
 #Deletes genre
 @router.delete("/{genre_id}")
@@ -119,15 +90,5 @@ def delete_genre(
         Finds the genre by its ID and allows deletes it from the DB
 
     """
-    genre = db.get(Genre, genre_id)
 
-    if not genre:
-        raise NotFoundException("Genre does not exist")
-
-    genre.users.clear()
-    genre.artists.clear()
-
-    db.delete(genre)
-    db.commit()
-
-    return {"message": "Genre deleted successfully!"}
+    return delete_genre_service(genre_id, db)

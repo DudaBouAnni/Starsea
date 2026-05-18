@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database.session import SessionLocal
-from app.exceptions import ValidationException
-from app.exceptions.NotFoundException import NotFoundException
-from app.models.artist import Artist
-from app.models.genre import Genre
+from app.services.artist_service import create_artist_service, list_artists_service, \
+    add_genre_artist_service, get_artist_events_service, update_artist_service, delete_artist_service, \
+    remove_artist_genres_service
 from app.schemas.artist import ArtistCreate, ArtistResponse, ArtistUpdate
 from typing import List
 
@@ -19,7 +18,7 @@ def get_db():
     finally:
         db.close()
 
-#Creates new artist
+#Create Artist
 @router.post("/", response_model=ArtistResponse)
 def create_artist(
         artist: ArtistCreate,
@@ -30,31 +29,8 @@ def create_artist(
         - **artist_name**: recebe nome do artista
         - **genres**: recebe nomes de gêneros existentes em lista
     """
-    db_artist = Artist(
-        artist_name=artist.artist_name
-   )
 
-    #Defines genre object
-    genre_objects = []
-
-    #Checks if genre exists in the DB
-    for genre_name in artist.genres:
-        genre = db.query(Genre).filter_by(
-            genre_name = genre_name
-        ).first()
-
-        if not genre:
-            raise NotFoundException(f"Genre '{genre_name}' does not exist.")
-
-        genre_objects.append(genre)
-
-    db_artist.genres = genre_objects
-
-    db.add(db_artist)
-    db.commit()
-    db.refresh(db_artist)
-
-    return db_artist
+    return create_artist_service(artist, db)
 
 #Returns all artists
 @router.get("/", response_model=List[ArtistResponse])
@@ -68,11 +44,11 @@ def list_artists(
         - **genres**: returns artist's genre list
 
     """
-    return db.query(Artist).all()
+    return list_artists_service(db)
 
 #Adds genre to an artist
 @router.post("/{artist_id}/genres/{genre_id}", response_model=ArtistResponse)
-def add_genre_to_artist(
+def add_genre_artist(
     artist_id: int,
     genre_id: int,
     db: Session = Depends(get_db)):
@@ -85,17 +61,7 @@ def add_genre_to_artist(
 
         Finds an artist by its ID and adds the selected genre to the artist's genre list
     """
-
-    artist = db.get(Artist, artist_id)
-    genre = db.get(Genre, genre_id)
-
-    #Checks if artist or genre exists in the DB
-    if not artist or not genre:
-        raise NotFoundException("Artist does not exist")
-
-    artist.genres.append(genre)
-
-    db.commit()
+    return add_genre_artist_service(artist_id, genre_id, db)
 
 #Returns all events from an artist
 @router.get("/{artist_id}/events", response_model=list[EventResponse])
@@ -109,12 +75,7 @@ def get_artist_events(
 
     """
 
-    artist = db.get(Artist, artist_id)
-
-    if not artist:
-        raise NotFoundException("Artist not found")
-
-    return artist.events
+    return get_artist_events_service(artist_id, db)
 
 #Updates artist
 @router.patch("/{artist_id}", response_model=ArtistResponse)
@@ -133,21 +94,7 @@ def update_artist(
 
     """
 
-    artist = db.get(Artist, artist_id)
-
-    #Checks if artist exists in the DB
-    if not artist:
-        raise NotFoundException("Artist does not exist")
-
-    update_artist = updated_data.model_dump(exclude_unset=True)
-
-    for key, value in update_artist.items():
-        setattr(artist, key, value)
-
-    db.commit()
-    db.refresh(artist)
-
-    return artist
+    return update_artist_service(artist_id, updated_data, db)
 
 #Deletes artist
 @router.delete("/{artist_id}")
@@ -163,18 +110,7 @@ def delete_artist(
        Finds the artist by its ID and removes it from the DB
     """
 
-    artist = db.get(Artist, artist_id)
-
-    #Checks if artist exists in the DB
-    if not artist:
-        raise NotFoundException("Artist does not exist")
-
-    artist.genres.clear()
-
-    db.delete(artist)
-    db.commit()
-
-    return {"message": "Artist deleted successfully!"}
+    return delete_artist_service(artist_id, db)
 
 #Deletes genre from an artist
 @router.delete("/{artist_id}/genres/{genre_id}")
@@ -192,19 +128,4 @@ def remove_genre_artist(
        Finds the artist by its ID, then finds the artist's genre by its ID and removes it from the artist's genre list
     """
 
-    artist = db.get(Artist, artist_id)
-    genre = db.get(Genre, genre_id)
-
-    #Checks if artist and/or genre exists in the DB
-    if not artist or not genre:
-        raise NotFoundException("Artist or Genre does not exist")
-
-    #Checks if the genre is linked to the artist
-    if genre not in artist.genres:
-        raise ValidationException("Genre not linked to this artist")
-
-    artist.genres.remove(genre)
-
-    db.commit()
-
-    return {"message": "Genre removed from artist successfully!"}
+    return remove_artist_genres_service
