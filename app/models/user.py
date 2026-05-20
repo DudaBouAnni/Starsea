@@ -20,7 +20,10 @@ class User(Base):
     username = Column(String(100), index=True)
     email = Column(String(225), unique=True, index=True)
     user_password = Column(String(225), unique=True, index=True)
-
+    #Spotify connection information
+    profile_image = Column(String(500), nullable=True)
+    spotify_id = Column(String(255), unique=True, nullable=True)
+    country = Column(String(10), nullable=True)
 
     #Relationship with event
     events = relationship(

@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.exceptions.BadRequestException import BadRequestException
-from app.exceptions.ConflictException import ConflitException
+from app.exceptions.ConflictException import ConflictException
 from app.exceptions.NotFoundException import NotFoundException
 from app.models import Event
 from app.models.genre import Genre
@@ -12,12 +12,14 @@ def create_user_service(user: UserCreate, db: Session):
     exists = db.query(User).filter(User.email == user.email).first()
 
     if exists:
-        raise ConflitException("Email already registered")
+        raise ConflictException("Email already registered")
 
     db_user = User(
         username = user.username,
         email = user.email,
-        user_password=user.user_password
+        user_password=user.user_password,
+        profile_image = user.profile_image or "",
+        country = user.country or ""
     )
 
     db.add(db_user),
@@ -39,7 +41,7 @@ def add_genre_user_service(user_id: int, genre_id: int, db: Session):
         raise NotFoundException("User or Genre does not exist")
 
     if genre in user.genres:
-        raise ConflitException("Genre already exists")
+        raise ConflictException("Genre already exists")
 
     user.genres.append(genre)
 
@@ -65,7 +67,7 @@ def add_event_user_service(user_id: int, event_id: int, db: Session):
         raise NotFoundException("User or Event does not exist")
 
     if event in user.events:
-        raise ConflitException("Event already linked")
+        raise ConflictException("Event already linked")
 
     user.events.append(event)
 

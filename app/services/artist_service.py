@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.exceptions.ConflictException import ConflitException
+from app.exceptions.ConflictException import ConflictException
 from app.exceptions.NotFoundException import NotFoundException
 from app.exceptions.ValidationException import ValidationException
 from app.models import Artist, Genre
@@ -46,7 +46,7 @@ def add_genre_artist_service(artist_id: int, genre_id: int, db: Session):
         raise NotFoundException("Artist or Genre does not exist")
 
     if genre in artist.genres:
-        raise ConflitException("Genre already linked to Artist")
+        raise ConflictException("Genre already linked to Artist")
 
     artist.genres.append(genre)
 

@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.exceptions.ConflictException import ConflitException
+from app.exceptions.ConflictException import ConflictException
 from app.exceptions.NotFoundException import NotFoundException
 from app.models import Genre
 from app.schemas.genre import GenreCreate, GenreUpdate
@@ -11,7 +11,7 @@ def create_genre_service(genre: GenreCreate, db: Session):
     exists = db.query(Genre).filter_by(genre_name=genre.genre_name).first()
 
     if exists:
-        raise ConflitException("Genre already exists")
+        raise ConflictException("Genre already exists")
 
     db_genre = Genre(genre_name=genre.genre_name)
 

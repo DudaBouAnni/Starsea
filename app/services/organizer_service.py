@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.exceptions.ConflictException import ConflitException
+from app.exceptions.ConflictException import ConflictException
 from app.exceptions.NotFoundException import NotFoundException
 from app.models import Organizer
 from app.schemas.organizer import OrganizerCreate, OrganizerUpdate
@@ -10,7 +10,7 @@ def create_organizer_service(organizer: OrganizerCreate, db: Session):
     exists = db.query(Organizer).filter_by(organizer_name=organizer.organizer_name).first()
 
     if exists:
-        raise ConflitException("Organizer already exists")
+        raise ConflictException("Organizer already exists")
 
     db_organizer = Organizer(organizer_name=organizer.organizer_name)
 

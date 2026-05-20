@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from app.database.session import SessionLocal
 from app.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.services.user_service import create_user_service, list_users_service, add_genre_user_service, \
-    get_user_genres_service, add_event_user_service, get_user_events_service, update_user_service, delete_user_serice, \
-    delete_user_service, delete_genre_user_service
+    get_user_genres_service, add_event_user_service, get_user_events_service, update_user_service, delete_user_service, \
+    delete_genre_user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -132,7 +132,7 @@ def update_user(
 
     return update_user_service(user_id, updated_data, db)
 
-#Deletes user
+#Delete user
 @router.delete("/{user_id}")
 def delete_user(
         user_id: int,

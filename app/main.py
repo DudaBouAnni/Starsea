@@ -6,6 +6,7 @@ from app.api.user import router as users_router
 from app.api.event import router as events_router
 from app.api.artist import router as artists_router
 from app.api.genre import router as genres_router
+from app.api.auth import router as auth_router
 from app.api.organizer import router as organizers_router
 
 """
@@ -34,6 +35,7 @@ app.include_router(events_router)
 app.include_router(artists_router)
 app.include_router(genres_router)
 app.include_router(organizers_router)
+app.include_router(auth_router)
 
 #Health check
 @app.get("/", summary="Verifica se API está rodando", response_description="Status da API")

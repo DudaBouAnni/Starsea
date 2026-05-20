@@ -4,7 +4,7 @@ from os.path import exists
 from sqlalchemy.orm import Session
 
 from app.exceptions.BadRequestException import BadRequestException
-from app.exceptions.ConflictException import ConflitException
+from app.exceptions.ConflictException import ConflictException
 from app.exceptions.NotFoundException import NotFoundException
 from app.models import Event, Artist
 from app.schemas import artist
@@ -18,7 +18,7 @@ def create_event_service(event_data, db: Session):
     exists = db.query(Event).filter_by(event_name = event_data.event_name).first()
 
     if exists:
-        raise ConflitException("Event already exists")
+        raise ConflictException("Event already exists")
 
     db_event = Event(
         event_name = event_data.event_name,
@@ -74,7 +74,7 @@ def add_artist_event_service(event_id: int, artist_id: int, db: Session):
         raise NotFoundException("Event or Artist does not exist")
 
     if artist in event.artists:
-        raise ConflitException("Artist already in the event")
+        raise ConflictException("Artist already in the event")
 
     event.artists.append(artist)
 
