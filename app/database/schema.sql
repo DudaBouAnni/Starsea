@@ -8,10 +8,12 @@ CREATE TABLE users
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    user_password VARCHAR(255) NOT NULL,
+    user_password VARCHAR(255),
     spotify_id VARCHAR(255) UNIQUE,
     profile_image VARCHAR(500),
-    country VARCHAR(10)
+    country VARCHAR(10),
+    city VARCHAR(100),
+    state VARCHAR(100)
 );
 
 -- ORGANIZERS TABLE

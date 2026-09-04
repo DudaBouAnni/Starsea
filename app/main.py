@@ -10,26 +10,26 @@ from app.api.auth import router as auth_router
 from app.api.organizer import router as organizers_router
 
 """
-Main da API Starsea.
+Main file of the Starsea API
 
-Responsável por:
-- Inicializar a aplicação FastAPI
-- Criar as tabelas no banco de dados (se não existirem)
-- Registrar os routers de cada recurso (usuários, eventos, artistas, gêneros, organizadores)
-- Fornecer endpoint de health check
+Responsible for:
+- Initializing the FastAPI application
+- Creating database tables if they do not exist
+- Registering routers for each resource (users, events, artists, genres, organizers)
+- Providing a health check endpoint
 """
 
-#Cria instância do FastAPI
+#Creates the FastAPI instance
 app = FastAPI(
     title="Starsea API",
-    description="API para gerenciamento das entidades do Starsea",
+    description="API for managing Starsea entities",
     version="1.0.0"
 )
 
-#Cria as tabelas no banco
+#Creates the database tables
 Base.metadata.create_all(bind=engine)
 
-#Registra os routers
+#Register the routers
 app.include_router(users_router)
 app.include_router(events_router)
 app.include_router(artists_router)
@@ -38,12 +38,12 @@ app.include_router(organizers_router)
 app.include_router(auth_router)
 
 #Health check
-@app.get("/", summary="Verifica se API está rodando", response_description="Status da API")
+@app.get("/", summary="Checks if the API is running", response_description="Status da API")
 def health_check():
     """
-       Endpoint de health check da aplicação.
+       Application health check endpoint
 
-       Retorna:
-        - status: indica se a API está online
+       Returns:
+        - status: indicates wheather the API is online
     """
     return {"status": "ok"}

@@ -9,7 +9,7 @@ def get_spotify_login_url():
         f"?client_id={settings.SPOTIFY_CLIENT_ID}"
         "&response_type=code"
         f"&redirect_uri={settings.SPOTIFY_REDIRECT_URI}"
-        "&scope=user-read-email"
+        "&scope=user-read-email user-read-private"
     )
 
 def get_access_token(code: str):

@@ -19,7 +19,9 @@ class User(Base):
     user_id = Column(Integer, primary_key=True, index=True)
     username = Column(String(100), index=True)
     email = Column(String(225), unique=True, index=True)
-    user_password = Column(String(225), unique=True, index=True)
+    user_password = Column(String(225), nullable=True)
+    city = Column(String(100), index=True)
+    state = Column(String(100), index=True)
     #Spotify connection information
     profile_image = Column(String(500), nullable=True)
     spotify_id = Column(String(255), unique=True, nullable=True)

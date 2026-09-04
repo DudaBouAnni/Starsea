@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
 
@@ -15,5 +15,10 @@ def spotify_login():
     }
 
 @router.get("/callback")
-def spotify_callback(code: str, db: Session = Depends(get_db)):
-    return spotify_callback_service(code, db)
+def spotify_callback(code: str, request: Request, db: Session = Depends(get_db)):
+
+    ip = request.client.host
+
+    print("ip recebido: ",ip)
+
+    return spotify_callback_service(code, ip, db)

@@ -1,12 +1,12 @@
 from sqlalchemy.orm import Session
 
-from app.exceptions.ConflictException import ConflictException
 from app.exceptions.NotFoundException import NotFoundException
 from app.models import User
+from app.services.location_service import get_location_from_ip
 from app.services.spotify_service import get_access_token, get_spotify_user
 
 
-def spotify_callback_service(code: str, db: Session):
+def spotify_callback_service(code: str, ip: str, db: Session):
     token_data = get_access_token(code)
 
     access_token = token_data.get("access_token")
@@ -20,7 +20,22 @@ def spotify_callback_service(code: str, db: Session):
         User.email == spotify_user.get("email")).first()
 
     if existing_user:
-        raise ConflictException("There is already a user with this email")
+        existing_user.spotify_id = spotify_user.get("id")
+        existing_user.country = spotify_user.get("country")
+        existing_user.city = location.get("city")
+        existing_user.state = location.get("region")
+
+
+        if spotify_user.get("images"):
+            existing_user.profile_image = spotify_user["images"][0]["url"]
+
+        db.commit()
+        db.refresh(existing_user)
+
+        return {
+            "message": "Login successful",
+            "user": existing_user
+        }
 
     profile_image = None
 
@@ -33,7 +48,8 @@ def spotify_callback_service(code: str, db: Session):
         spotify_id=spotify_user.get("id"),
         country=spotify_user.get("country"),
         profile_image=profile_image,
-        user_password=""
+        city=location.get("city"),
+        state=location.get("region")
     )
 
     db.add(new_user)
