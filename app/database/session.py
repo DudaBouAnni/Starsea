@@ -8,7 +8,18 @@ load_dotenv()
 
 # URL de conexão com o banco de dados
 DATABASE_URL = os.getenv("DATABASE_URL")
-engine = create_engine(DATABASE_URL)
+
+# Certificado SSL do TiDB
+CA_PATH = os.getenv("CA_PATH")
+
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={
+        "ssl_ca": CA_PATH,
+        "ssl_verify_cert": True,
+        "ssl_verify_identity": True,
+    }
+)
 
 # Cria a fábrica de sessões locais
 SessionLocal = sessionmaker(
