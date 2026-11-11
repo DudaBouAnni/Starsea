@@ -1,0 +1,15 @@
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+extend-exclude = [".runtime"]
+
+[tool.ruff.lint]
+# Regras de organização e estilo; as limitações do código legado continuam documentadas.
+select = ["E4", "E7", "E9", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# O ambiente dos testes precisa ser configurado antes de importar a aplicação.
+"tests/conftest.py" = ["E402"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

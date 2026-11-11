@@ -1,131 +1,114 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from app.database.session import SessionLocal
-from app.services.artist_service import create_artist_service, list_artists_service, \
-    add_genre_artist_service, get_artist_events_service, update_artist_service, delete_artist_service, \
-    remove_artist_genres_service
-from app.schemas.artist import ArtistCreate, ArtistResponse, ArtistUpdate
 from typing import List
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.api.dependencies import get_db
+from app.schemas.artist import ArtistCreate, ArtistResponse, ArtistUpdate
 from app.schemas.event import EventResponse
+from app.services.artist_service import (
+    add_genre_artist_service,
+    create_artist_service,
+    delete_artist_service,
+    get_artist_events_service,
+    list_artists_service,
+    remove_artist_genres_service,
+    update_artist_service,
+)
 
 router = APIRouter(prefix="/artists", tags=["artists"])
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
-#Create Artist
+# Cria um artista
 @router.post("/", response_model=ArtistResponse)
-def create_artist(
-        artist: ArtistCreate,
-        db: Session = Depends(get_db)):
+def create_artist(artist: ArtistCreate, db: Session = Depends(get_db)):
     """
-        Cria um novo artista no banco de dados:
+    Cria um novo artista no banco de dados:
 
-        - **artist_name**: recebe nome do artista
-        - **genres**: recebe nomes de gêneros existentes em lista
+    - **artist_name**: recebe nome do artista
+    - **genres**: recebe nomes de gêneros existentes em lista
     """
 
     return create_artist_service(artist, db)
 
-#Returns all artists
+
+# Retorna todos os artistas
 @router.get("/", response_model=List[ArtistResponse])
-def list_artists(
-        db: Session = Depends(get_db)):
+def list_artists(db: Session = Depends(get_db)):
     """
-        Returns the following information for all artists registered in the DB:
+    Retorna as informações dos artistas cadastrados no banco.
 
-        - **artist_name**: returns artist name
-        - **artist_id**: returns artist ID
-        - **genres**: returns artist's genre list
-
+    - **artist_name**: nome do artista.
+    - **artist_id**: identificador do artista.
+    - **genres**: lista de gêneros do artista.
     """
     return list_artists_service(db)
 
-#Adds genre to an artist
+
+# Adiciona um gênero ao artista
 @router.post("/{artist_id}/genres/{genre_id}", response_model=ArtistResponse)
-def add_genre_artist(
-    artist_id: int,
-    genre_id: int,
-    db: Session = Depends(get_db)):
-
+def add_genre_artist(artist_id: int, genre_id: int, db: Session = Depends(get_db)):
     """
-       Adds new genre to an artist:
+    Adiciona um gênero à lista de gêneros do artista.
 
-       - **artist_id**: receives artist ID
-       - **genre_id**: receive genre ID
+    - **artist_id**: identificador do artista.
+    - **genre_id**: identificador do gênero.
 
-        Finds an artist by its ID and adds the selected genre to the artist's genre list
+    Localiza os registros pelos identificadores e cria a associação.
     """
     return add_genre_artist_service(artist_id, genre_id, db)
 
-#Returns all events from an artist
+
+# Retorna os eventos do artista
 @router.get("/{artist_id}/events", response_model=list[EventResponse])
-def get_artist_events(
-        artist_id: int,
-        db: Session = Depends(get_db)):
+def get_artist_events(artist_id: int, db: Session = Depends(get_db)):
     """
-       Returns all events from an artist:
+    Retorna todos os eventos do artista.
 
-       - **artist_id**: receives artist ID
-
+    - **artist_id**: identificador do artista.
     """
 
     return get_artist_events_service(artist_id, db)
 
-#Updates artist
+
+# Atualiza o artista
 @router.patch("/{artist_id}", response_model=ArtistResponse)
-def update_artist(
-    artist_id: int,
-    updated_data: ArtistUpdate,
-    db: Session = Depends(get_db)
-):
+def update_artist(artist_id: int, updated_data: ArtistUpdate, db: Session = Depends(get_db)):
     """
+    Atualiza os dados do artista.
 
-       Updates artist information:
+    - **artist_id**: identificador do artista.
 
-       - **artist_id**: recieves artist ID
-
-       Finds the artist by its ID and allows updating its data
-
+    Localiza o artista pelo identificador e permite atualizar seus dados.
     """
 
     return update_artist_service(artist_id, updated_data, db)
 
-#Deletes artist
+
+# Exclui o artista
 @router.delete("/{artist_id}")
-def delete_artist(
-        artist_id: int,
-        db: Session = Depends(get_db)):
-
+def delete_artist(artist_id: int, db: Session = Depends(get_db)):
     """
-       Deletes artist from the DB
+    Exclui o artista do banco de dados.
 
-       - **artist_id**: receives artist ID
+    - **artist_id**: identificador do artista.
 
-       Finds the artist by its ID and removes it from the DB
+    Localiza o artista pelo identificador e remove seu registro.
     """
 
     return delete_artist_service(artist_id, db)
 
-#Deletes genre from an artist
+
+# Remove um gênero do artista
 @router.delete("/{artist_id}/genres/{genre_id}")
-def remove_genre_artist(
-    artist_id: int,
-    genre_id: int,
-    db: Session = Depends(get_db)
-    ):
+def remove_genre_artist(artist_id: int, genre_id: int, db: Session = Depends(get_db)):
     """
-       Removes genre from an artist:
+    Remove um gênero da lista de gêneros do artista.
 
-       - **artist_id**: receives artist ID
-       - **genre_id**: receives genre ID
+    - **artist_id**: identificador do artista.
+    - **genre_id**: identificador do gênero.
 
-       Finds the artist by its ID, then finds the artist's genre by its ID and removes it from the artist's genre list
+    Localiza o artista e o gênero e desfaz a associação.
     """
 
-    return remove_artist_genres_service
+    return remove_artist_genres_service(artist_id, genre_id, db)

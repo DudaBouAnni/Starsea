@@ -1,13 +1,13 @@
 from typing import Optional
-from pydantic import BaseModel
+
+from pydantic import BaseModel, ConfigDict
 
 
 class UserBase(BaseModel):
     """
-    Base user schema.
+    Esquema base de usuário.
 
-    Contains the fields used in user creation,
-    response, and update schemas.
+    Define os campos utilizados na criação, nas respostas e na atualização de usuários.
     """
 
     username: str
@@ -18,16 +18,13 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    """
-    Schema used to create a user.
-    """
+    """Esquema para criar um usuário."""
+
     pass
 
 
 class UserResponse(BaseModel):
-    """
-    Schema used when requesting user information.
-    """
+    """Esquema de resposta com os dados públicos do usuário."""
 
     user_id: int
     username: str
@@ -35,14 +32,13 @@ class UserResponse(BaseModel):
     profile_image: Optional[str] = None
     country: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserUpdate(BaseModel):
     """
-    Schema used to update an existing user.
-    All fields are optional.
+    Esquema para atualizar um usuário existente.
+    Todos os campos são opcionais.
     """
 
     username: Optional[str] = None
@@ -51,5 +47,4 @@ class UserUpdate(BaseModel):
     profile_image: Optional[str] = None
     country: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

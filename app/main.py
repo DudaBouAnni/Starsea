@@ -1,49 +1,37 @@
+"""
+Arquivo principal da API Starsea.
+
+Responsável por:
+- Inicializar a aplicação FastAPI.
+- Criar as tabelas que ainda não existem.
+- Registrar as rotas de usuários, eventos, artistas, gêneros e organizadores.
+- Disponibilizar uma rota para verificar o funcionamento da API.
+"""
+
 from fastapi import FastAPI
 
-from app.database.session import engine
+from app.api.router import API_ROUTERS
 from app.database.base import Base
-from app.api.user import router as users_router
-from app.api.event import router as events_router
-from app.api.artist import router as artists_router
-from app.api.genre import router as genres_router
-from app.api.auth import router as auth_router
-from app.api.organizer import router as organizers_router
+from app.database.session import engine
 
-"""
-Main file of the Starsea API
+# Cria a instância do FastAPI
+app = FastAPI(title="Starsea API", description="API for managing Starsea entities", version="1.0.0")
 
-Responsible for:
-- Initializing the FastAPI application
-- Creating database tables if they do not exist
-- Registering routers for each resource (users, events, artists, genres, organizers)
-- Providing a health check endpoint
-"""
-
-#Creates the FastAPI instance
-app = FastAPI(
-    title="Starsea API",
-    description="API for managing Starsea entities",
-    version="1.0.0"
-)
-
-#Creates the database tables
+# Cria as tabelas que ainda não existem no banco
 Base.metadata.create_all(bind=engine)
 
-#Register the routers
-app.include_router(users_router)
-app.include_router(events_router)
-app.include_router(artists_router)
-app.include_router(genres_router)
-app.include_router(organizers_router)
-app.include_router(auth_router)
+# Registra as rotas da aplicação
+for router in API_ROUTERS:
+    app.include_router(router)
 
-#Health check
+
+# Verifica se a API está disponível
 @app.get("/", summary="Checks if the API is running", response_description="Status da API")
 def health_check():
     """
-       Application health check endpoint
+    Verifica se a aplicação está disponível.
 
-       Returns:
-        - status: indicates wheather the API is online
+    Retorna:
+    - **status**: indica se a API está em funcionamento.
     """
     return {"status": "ok"}

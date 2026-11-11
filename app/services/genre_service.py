@@ -4,9 +4,10 @@ from app.exceptions.ConflictException import ConflictException
 from app.exceptions.NotFoundException import NotFoundException
 from app.models import Genre
 from app.schemas.genre import GenreCreate, GenreUpdate
+from app.services.nearby_service import sync_all_notifications
 
 
-#Create Genre
+# Cria um gênero
 def create_genre_service(genre: GenreCreate, db: Session):
     exists = db.query(Genre).filter_by(genre_name=genre.genre_name).first()
 
@@ -22,11 +23,13 @@ def create_genre_service(genre: GenreCreate, db: Session):
 
     return db_genre
 
-#List Genres
+
+# Lista os gêneros
 def list_genre_service(db: Session):
     return db.query(Genre).all()
 
-#Get Genre Artists
+
+# Consulta os artistas do gênero
 def get_genre_artists_service(genre_id: int, db: Session):
     genre = db.get(Genre, genre_id)
 
@@ -35,7 +38,8 @@ def get_genre_artists_service(genre_id: int, db: Session):
 
     return genre.artists
 
-#Update Genre
+
+# Atualiza o gênero
 def update_genre_service(genre_id: int, updated_data: GenreUpdate, db: Session):
     genre = db.get(Genre, genre_id)
 
@@ -46,13 +50,14 @@ def update_genre_service(genre_id: int, updated_data: GenreUpdate, db: Session):
 
     for key, value in updated_data.items():
         setattr(genre, key, value)
-
+    sync_all_notifications(db)
     db.commit()
     db.refresh(genre)
 
     return genre
 
-#Delete Genre
+
+# Exclui o gênero
 def delete_genre_service(genre_id: int, db: Session):
     genre = db.get(Genre, genre_id)
 
@@ -63,7 +68,7 @@ def delete_genre_service(genre_id: int, db: Session):
     genre.artists.clear()
 
     db.delete(genre)
-
+    sync_all_notifications(db)
     db.commit()
 
     return {"message": "Genre deleted successfully!"}

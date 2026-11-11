@@ -1,144 +1,127 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 from typing import List
 
-from app.database.session import SessionLocal
-from app.schemas.event import EventResponse, EventCreate, EventUpdate
-from app.services.event_service import create_event_service, list_events_service, \
-    get_event_artists_service, add_artist_event_service, update_event_service, delete_event_service, \
-    remove_artist_event_service
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.api.dependencies import get_db
+from app.schemas.event import EventCreate, EventResponse, EventUpdate
+from app.services.event_service import (
+    add_artist_event_service,
+    create_event_service,
+    delete_event_service,
+    get_event_artists_service,
+    list_events_service,
+    remove_artist_event_service,
+    update_event_service,
+)
 
 router = APIRouter(prefix="/events", tags=["events"])
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
-#Create Event
+# Cria um evento
 @router.post("/", response_model=EventResponse)
-def create_event(
-        event: EventCreate,
-        db: Session = Depends(get_db)):
+def create_event(event: EventCreate, db: Session = Depends(get_db)):
     """
-        Creates a new event in the DB:
+    Cria um evento no banco de dados.
 
-        - **event_name**: receives event name
-        - **event_description**: receives event description
-        - **event_date**: receives event date
-        - **ticket_link**: receives official ticket sales website link for the event
-        - **event_location**: receives event location
-        - **organizer_id**: receives event organizer ID
-        - **artists**: receives a list of the artists participating in the event
-
+    - **event_name**: nome do evento.
+    - **event_description**: descrição do evento.
+    - **event_date**: data do evento.
+    - **ticket_link**: link oficial de venda de ingressos.
+    - **event_location**: local do evento.
+    - **organizer_id**: identificador do organizador.
+    - **artists**: lista de artistas participantes.
     """
     return create_event_service(event, db)
 
-#Lists Events
+
+# Lista os eventos
 @router.get("/", response_model=List[EventResponse])
-def list_events(
-        db: Session = Depends(get_db)):
+def list_events(db: Session = Depends(get_db)):
     """
-            Returns the following information for all events registered in the DB:
+    Retorna os dados dos eventos cadastrados no banco.
 
-            - **event_name**: returns event name
-            - **event_description**: returns event description
-            - **event_date**: returns event date
-            - **ticket_link**: returns official ticket sales website link for the event
-            - **event_location**: returns event location
-            - **organizer_id**: returns event organizer ID
-            - **artists**: returns a list of the artists participating in the event
-
+    - **event_name**: nome do evento.
+    - **event_description**: descrição do evento.
+    - **event_date**: data do evento.
+    - **ticket_link**: link oficial de venda de ingressos.
+    - **event_location**: local do evento.
+    - **organizer_id**: identificador do organizador.
+    - **artists**: lista de artistas participantes.
     """
     return list_events_service(db)
 
-#Get Event Artists
+
+# Consulta os artistas do evento
 @router.get("/{event_id}/artists/{artist_id}")
 def get_artist_event(event_id: int, artist_id: int, db: Session = Depends(get_db)):
     """
-        Returns all artists from an event:
+    Retorna os artistas participantes do evento.
 
-        - **event_id**: receives event ID
+    - **event_id**: identificador do evento.
 
-        Finds event by its ID and returns the list of artists participating and their information
-
+    Localiza o evento pelo identificador e retorna os dados dos artistas associados.
     """
     return get_event_artists_service(event_id, artist_id, db)
 
-#Add Artist to Event
+
+# Adiciona um artista ao evento
 @router.post("/{event_id}/artists/{artist_id}")
-def add_artist_event(
-        event_id: int,
-        artist_id: int,
-        db: Session = Depends(get_db)):
+def add_artist_event(event_id: int, artist_id: int, db: Session = Depends(get_db)):
     """
-            Adds more artists to the event:
+    Adiciona um artista ao evento.
 
-            - **event_id**: receives event ID
-            - **artist_id**: receives artist ID
+    - **event_id**: identificador do evento.
+    - **artist_id**: identificador do artista.
 
-            Receives event ID and artist ID, then adds the artist to the event
-
+    Localiza os registros e associa o artista ao evento.
     """
 
     return add_artist_event_service(event_id, artist_id, db)
 
-#Update Event
+
+# Atualiza o evento
 @router.patch("/{event_id}")
-def update_event(
-    event_id: int,
-    updated_data: EventUpdate,
-    db: Session = Depends(get_db)):
+def update_event(event_id: int, updated_data: EventUpdate, db: Session = Depends(get_db)):
     """
-        Updates event information:
+    Atualiza os dados do evento.
 
-        - **event_id**: receives event ID
-        - **event_name**: returns event name
-        - **event_description**: returns event description
-        - **event_date**: returns event date
-        - **ticket_link**: returns official ticket sales website link for the event
-        - **event_location**: returns event location
-        - **organizer_id**: returns event organizer ID
-        - **artists**: returns a list of the artists participating in the event
+    - **event_id**: identificador do evento.
+    - **event_name**: nome do evento.
+    - **event_description**: descrição do evento.
+    - **event_date**: data do evento.
+    - **ticket_link**: link oficial de venda de ingressos.
+    - **event_location**: local do evento.
+    - **organizer_id**: identificador do organizador.
+    - **artists**: lista de artistas participantes.
 
-        Finds an event by its ID and allows updating his data
-
+    Localiza o evento pelo identificador e permite atualizar seus dados.
     """
     return update_event_service(event_id, updated_data, db)
 
-#Deletes event
+
+# Exclui o evento
 @router.delete("/{event_id}")
-def delete_event(
-        event_id: int,
-        db: Session = Depends(get_db)):
-
+def delete_event(event_id: int, db: Session = Depends(get_db)):
     """
-        Deletes event:
+    Exclui o evento do banco de dados.
 
-        - **event_id**: receives event ID
+    - **event_id**: identificador do evento.
 
-        Finds event by its ID and deletes it from the DB
-
+    Localiza o evento pelo identificador e remove seu registro.
     """
     return delete_event_service(event_id, db)
 
-#Remove Artist from Event
+
+# Remove um artista do evento
 @router.delete("/{event_id}/artists/{artist_id}")
-def remove_artist_event(
-    event_id: int,
-    artist_id: int,
-    db: Session = Depends(get_db)
-    ):
-
+def remove_artist_event(event_id: int, artist_id: int, db: Session = Depends(get_db)):
     """
-        Updates event information:
+    Remove um artista da lista de participantes do evento.
 
-        - **event_id**: recieves the event ID
-        - **artist_id**: recieves the artist ID
+    - **event_id**: identificador do evento.
+    - **artist_id**: identificador do artista.
 
-        Finds the event by its ID, recieves the artist ID, and removes the artist from the event
-
+    Localiza os registros e desfaz a associação entre o evento e o artista.
     """
     return remove_artist_event_service(event_id, artist_id, db)

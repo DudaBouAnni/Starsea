@@ -1,47 +1,55 @@
 from __future__ import annotations
-from typing import List, Optional
-from pydantic import BaseModel, Field
+
 from datetime import date
+from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.artist import ArtistResponse
+from app.schemas.location import OptionalCoordinates
 from app.schemas.organizer import OrganizerResponse
 
 
-class EventBase(BaseModel):
+class EventBase(OptionalCoordinates):
     """
-    Base event schema.
+    Esquema base de evento.
 
-    Contains the fields used in event creation, response, and update schemas.
+    Define os campos utilizados na criação, nas respostas e na atualização de eventos.
     """
+
     event_name: str
     event_description: str
     event_date: date
     ticket_link: str
     event_location: str
 
+
 class EventCreate(EventBase):
-    #Schema used to create an event.
+    # Esquema de dados para criar um evento.
     organizer_id: int
     artists: list[str] = Field(default_factory=list)
 
+
 class EventResponse(EventBase):
-    #Schema used when requesting event information.
+    # Esquema de resposta com os dados do evento.
     event_id: int
     artists: List[ArtistResponse] = []
     organizer: OrganizerResponse
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
-class EventUpdate(BaseModel):
+
+class EventUpdate(OptionalCoordinates):
     """
-    Schema used to update an existing event.
-    All fields are optional.
+    Esquema para atualizar um evento existente.
+    Todos os campos são opcionais.
     """
+
     event_name: Optional[str] = None
     event_description: Optional[str] = None
     event_date: Optional[date] = None
     ticket_link: Optional[str] = None
     event_location: Optional[str] = None
+
 
 EventResponse.model_rebuild()

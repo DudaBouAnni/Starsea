@@ -1,20 +1,18 @@
-from sqlalchemy import Table, Column, Integer, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, Table
+
 from app.database.base import Base
 
 """
-Association table between Artist and Genre.
+Tabela associativa entre artista e gênero.
 
-Responsible for implementing the many-to-many relationship between artists and genres.
-Each record represents the association between an artist and a genre.
-
+Implementa a relação muitos para muitos entre artistas e gêneros.
+Cada registro representa a associação de um artista a um gênero.
 """
 artist_genre = Table(
     "artist_genre",
     Base.metadata,
-
-    #Aritst ID
+    # Identificador do artista
     Column("artist_id", Integer, ForeignKey("artists.artist_id"), primary_key=True),
-
-    #Genre ID
-    Column("genre_id", Integer, ForeignKey("genres.genre_id"), primary_key=True)
+    # Identificador do gênero
+    Column("genre_id", Integer, ForeignKey("genres.genre_id"), primary_key=True),
 )
