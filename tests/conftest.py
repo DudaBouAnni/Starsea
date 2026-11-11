@@ -4,7 +4,6 @@ os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["SPOTIFY_CLIENT_ID"] = "test"
 os.environ["SPOTIFY_CLIENT_SECRET"] = "test"
 os.environ["SPOTIFY_REDIRECT_URI"] = "http://localhost/auth/callback"
-os.environ.pop("GOOGLE_MAPS_API_KEY", None)
 
 import pytest
 from fastapi.testclient import TestClient

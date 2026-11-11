@@ -1,14 +1,18 @@
 import os
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-load_dotenv()
+from app.database.config import PROJECT_ROOT, database_engine, is_local_database
+
+load_dotenv(PROJECT_ROOT / ".env")
 
 # URL de conexão com o banco de dados
 DATABASE_URL = os.getenv("DATABASE_URL")
-engine = create_engine(DATABASE_URL)
+if not DATABASE_URL:
+    raise ValueError("Defina DATABASE_URL no arquivo .env.")
+engine = database_engine(DATABASE_URL, os.getenv("CA_PATH"))
+AUTO_CREATE_TABLES = is_local_database(DATABASE_URL)
 
 # Cria a fábrica de sessões locais
 SessionLocal = sessionmaker(

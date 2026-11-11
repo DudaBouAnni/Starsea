@@ -23,7 +23,7 @@ O repositório contém o backend da aplicação e está em desenvolvimento.
 - Consulta opcional de cidade e estado por IP no login, sem substituir as coordenadas do dispositivo.
 - Descoberta de shows próximos por coordenadas e raio de distância.
 - Notificações na aplicação, com preferência de recebimento e marcação de leitura.
-- Integração com Google Maps para consultar trajetos de carro, a pé, bicicleta e transporte público.
+- Link para abrir o Google Maps no local do show, sem chave de API; as rotas e os meios de transporte são escolhidos no próprio Maps.
 - Importação dos artistas de maior afinidade do Spotify e escolha manual de artistas favoritos.
 - Recomendações e avisos que cruzam artistas ou gêneros do perfil musical, data do show e proximidade.
 
@@ -51,7 +51,7 @@ O fluxo principal de uma requisição é: **rota → serviço → banco de dados
 - `app/api/router.py` reúne os routers na ordem de registro da aplicação.
 - `app/main.py` concentra a inicialização da API, o registro de rotas e o health check.
 - As operações de localização, preferências e sincronização de notificações ficam em `app/services/nearby_service.py`; as rotas recebem os dados e delegam essas operações.
-- A integração com o Google Maps separa a montagem de coordenadas, a interpretação das estimativas e a consulta ao provedor em funções menores.
+- Os links do Google Maps são gerados localmente, sem chave de API nem consultas ao provedor.
 - Os schemas utilizam `ConfigDict` do Pydantic 2 para a leitura de objetos do banco.
 - `pyproject.toml` define os padrões de imports e formatação do Ruff e o diretório dos testes.
 
@@ -86,7 +86,7 @@ Existe também uma tabela `organizer_event` no código, mas os relacionamentos d
 - MySQL em execução e credenciais de acesso a um banco local.
 - Aplicativo cadastrado no Spotify Developer Dashboard para configurar as credenciais OAuth.
 
-As dependências estão em `requirements.txt`, com intervalos de versões. Os testes utilizam SQLite e simulam Google Maps e Spotify; a integração real com MySQL, Spotify e Google precisa ser validada com as credenciais do ambiente.
+As dependências estão em `requirements.txt`, com intervalos de versões. Os testes utilizam SQLite, simulam o Spotify e verificam os links do Google Maps sem chamadas externas. As integrações reais com MySQL e Spotify precisam ser validadas com as credenciais do ambiente; os links do Maps não exigem credenciais.
 
 ### 1. Acessar o projeto e criar um ambiente virtual
 
@@ -120,7 +120,6 @@ DATABASE_URL=mysql+pymysql://usuario:senha@localhost:3306/starsea
 SPOTIFY_CLIENT_ID=seu_client_id
 SPOTIFY_CLIENT_SECRET=seu_client_secret
 SPOTIFY_REDIRECT_URI=http://127.0.0.1:8000/auth/callback
-GOOGLE_MAPS_API_KEY=
 ```
 
 Substitua os valores de exemplo pelas suas configurações. Caracteres especiais no usuário ou na senha precisam ser codificados para uso em uma URL de conexão.
@@ -135,7 +134,11 @@ Execute o arquivo `app/database/schema.sql` em um cliente MySQL, como o MySQL Wo
 
 O script contém `CREATE DATABASE` e `CREATE TABLE` sem `IF NOT EXISTS`. Execute-o em um ambiente novo ou revise as instruções antes de aplicá-lo a um banco já existente.
 
-A aplicação também chama `Base.metadata.create_all()` ao iniciar. Essa chamada cria tabelas ausentes, mas não atualiza tabelas existentes.
+A aplicação chama `Base.metadata.create_all()` ao iniciar somente com SQLite ou MySQL local. Essa chamada cria tabelas ausentes, mas não atualiza tabelas existentes. Em bancos remotos compartilhados, a inicialização não cria tabelas nem aplica migrações automaticamente.
+
+Para TiDB Cloud, configure `DATABASE_URL` com a URL fornecida pelo serviço e as opções `ssl_verify_cert=true&ssl_verify_identity=true`. Defina `CA_PATH` com o caminho do certificado CA. Um caminho relativo, como `.runtime/certs/isrgrootx1.pem`, é resolvido a partir da raiz do projeto. O driver valida o certificado e o nome do servidor; um arquivo CA ausente ou inválido impede a conexão. Consulte a [configuração oficial do TiDB com PyMySQL](https://docs.pingcap.com/developer/dev-guide-sample-application-python-pymysql/).
+
+O script `iniciar.ps1` identifica o destino no `.env`: inicia o MySQL local apenas quando necessário e utiliza diretamente o banco remoto quando configurado. Migrações remotas só são executadas se o script receber explicitamente `-AplicarMigracoes`; faça isso somente após revisar as alterações com a equipe responsável pelo banco compartilhado. O arquivo `.env` e os certificados locais em `.runtime` não são versionados.
 
 **Se o banco já existia antes da funcionalidade de proximidade**, faça um backup e execute a migração antes de iniciar a API:
 
@@ -285,7 +288,7 @@ Envie `latitude` e `longitude` junto dos campos já exigidos em `POST /events/`.
 }
 ```
 
-O organizador deve existir. Ajuste a data para hoje ou uma data futura. As coordenadas são opcionais para manter a compatibilidade com os cadastros antigos, mas são necessárias para busca por proximidade e consulta de trajetos.
+O organizador deve existir. Ajuste a data para hoje ou uma data futura. As coordenadas são opcionais para manter a compatibilidade com os cadastros antigos, mas são necessárias para a busca por proximidade. Para abrir o local no Maps, basta que o evento tenha coordenadas ou endereço.
 
 Também é possível atualizar as duas coordenadas com `PATCH /events/{event_id}`. Envie ambas como `null` para remover a localização. O texto de `event_location` não é convertido automaticamente em coordenadas; ao mudar o local, atualize também as coordenadas ou remova as antigas.
 
@@ -320,42 +323,18 @@ Shows fora do raio e sem coordenadas não geram avisos. Ao mudar a localização
 
 **A entrega é uma caixa de notificações no backend.** O frontend precisa consultar os endpoints para exibir um sino, contador ou banner; não há envio de push, e-mail ou WhatsApp, nem worker agendado. Pode consultar periodicamente `GET /notifications` usando o caminho completo do usuário; para importações externas, execute também o endpoint de refresh. O modelo atual possui apenas a data do evento, portanto não diferencia um show em andamento de outro que ocorrerá mais tarde no mesmo dia.
 
-## Google Maps e meios de transporte
+## Abrir o local no Google Maps
 
-Para obter estimativas no backend:
+O fluxo principal não usa chave de API nem exige faturamento do Google Cloud. O Starsea fornece o link do local; a pessoa abre o Google Maps e toca em **Rotas**, escolhendo ali a origem e o meio de transporte. Esse comportamento utiliza os [links públicos oficiais do Google Maps](https://developers.google.com/maps/documentation/urls/get-started).
 
-1. Configure um projeto no Google Cloud com faturamento habilitado.
-2. Ative a **Routes API**.
-3. Crie uma chave, restrinja seu uso à Routes API e ao ambiente do servidor.
-4. Preencha `GOOGLE_MAPS_API_KEY` no `.env` e reinicie a API.
+- Cada evento retornado pela API possui `maps_url` para o frontend usar no botão **Ver no Maps**.
+- As listas de shows próximos e recomendados usam o mesmo link de localização.
+- `GET /events/{event_id}/map` redireciona o navegador diretamente para esse local no Google Maps.
+- O link prioriza latitude/longitude do evento; quando faltarem, pesquisa pelo endereço de `event_location`.
+- Não é necessário cadastrar a localização do usuário para abrir o local do evento. As coordenadas do usuário continuam sendo necessárias para calcular proximidade no Starsea.
+- Sem endereço ou coordenadas do evento, `maps_url` será nulo e o redirecionamento retornará 400.
 
-Consulte a [configuração oficial da Routes API](https://developers.google.com/maps/documentation/routes/get-api-key). As chamadas estão sujeitas à cobrança e às cotas da sua conta. A chave é utilizada apenas no servidor e não é retornada nas respostas.
-
-```http
-GET /users/1/events/1/routes
-```
-
-A resposta contém quatro opções: `driving`, `walking`, `bicycling` e `transit`. Para cada uma, informa disponibilidade, distância do trajeto em quilômetros, duração estimada em minutos e um link para abrir o Google Maps.
-
-Para escolher os meios de transporte e um limite de distância:
-
-```http
-GET /users/1/events/1/routes?modes=driving&modes=transit&max_distance_km=40
-```
-
-O campo `within_distance_limit` compara a distância do **trajeto** com esse limite, ou com o raio salvo do usuário quando o parâmetro não é enviado. Ele ajuda o frontend a indicar que uma rota está além da distância escolhida; não garante a viabilidade de uma viagem.
-
-Diferenças importantes:
-
-- `straight_line_distance_km` e as distâncias de busca/notificação são calculadas em linha reta, sem chamadas ao Google.
-- `routes[].distance_km` e `duration_minutes` são estimativas da Routes API para o meio de transporte escolhido.
-- As estimativas consideram **saída agora**, sem configuração de trânsito em tempo real; não são uma previsão para a data do show.
-- A disponibilidade de trajetos e de transporte público depende da cobertura do Google na região.
-- Cada consulta faz até uma chamada ao Google por meio de transporte distinto solicitado. As estimativas não são gravadas no banco.
-- Sem chave, os links do Google Maps continuam disponíveis; as estimativas ficam nulas e o status é `maps_not_configured`. Os [links do Maps não exigem chave](https://developers.google.com/maps/documentation/urls/get-started).
-- Quando não houver rota, o status será `no_route`. Falhas retornam `provider_timeout`, `provider_error` ou `invalid_provider_response`, sem inventar distância ou duração e sem impedir as demais opções de serem consultadas.
-
-A integração utiliza o endpoint [Compute Routes](https://developers.google.com/maps/documentation/routes/compute_route_directions). O mapa e a navegação são abertos pelo link `maps_url`; este repositório não contém uma tela com mapa incorporado.
+O frontend pode simplesmente utilizar um link HTML com `href` igual ao `maps_url` recebido. A aplicação não calcula trajetos nem precisa de credenciais do Google: origem, rotas, duração e transporte são escolhidos no próprio Maps.
 
 ## Testes
 
@@ -364,7 +343,7 @@ A integração utiliza o endpoint [Compute Routes](https://developers.google.com
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-Os testes usam bancos SQLite em memória, sem acessar seu banco configurado ou serviços externos. Cobrem proximidade, filtros, geração e leitura de avisos, preferências, exclusões, validação de coordenadas, migração repetível, integração de rotas simulada e falhas do provedor.
+Os testes usam bancos SQLite em memória, sem acessar seu banco configurado ou serviços externos. Cobrem proximidade, perfil musical, geração e leitura de avisos, preferências, exclusões, validação de coordenadas, migrações repetíveis, links do Maps e falhas simuladas do Spotify.
 
 Para conferir a organização do código:
 

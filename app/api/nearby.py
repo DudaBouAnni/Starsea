@@ -7,8 +7,8 @@ from app.schemas.location import (
     NotificationPreferencesUpdate,
     UserLocationUpdate,
 )
-from app.schemas.nearby import EventRoutes, NearbyEvent, NotificationResponse, TravelMode
-from app.services.maps_service import get_event_routes, maps_url
+from app.schemas.nearby import NearbyEvent, NotificationResponse
+from app.services.maps_service import event_map_url
 from app.services.nearby_service import (
     clear_user_location,
     get_user,
@@ -61,7 +61,7 @@ def get_nearby_events(
         user, db, radius_km if radius_km is not None else user.notification_radius_km
     )
     return [
-        NearbyEvent(event=event, distance_km=round(distance, 2), maps_url=maps_url(user, event))
+        NearbyEvent(event=event, distance_km=round(distance, 2), maps_url=event_map_url(event))
         for event, distance in matches[offset : offset + limit]
     ]
 
@@ -88,15 +88,3 @@ def refresh_notifications(user_id: int, db: Session = Depends(get_db)):
 )
 def read_notification(user_id: int, notification_id: int, db: Session = Depends(get_db)):
     return mark_notification_read(user_id, notification_id, db)
-
-
-@router.get("/{user_id}/events/{event_id}/routes", response_model=EventRoutes)
-def event_routes(
-    user_id: int,
-    event_id: int,
-    modes: list[TravelMode] | None = Query(None),
-    max_distance_km: float | None = Query(None, gt=0, le=1000, allow_inf_nan=False),
-    db: Session = Depends(get_db),
-):
-    """Compara os transportes. As estimativas consideram saída agora, não o horário do show."""
-    return get_event_routes(user_id, event_id, db, modes, max_distance_km)

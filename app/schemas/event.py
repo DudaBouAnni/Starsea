@@ -3,11 +3,12 @@ from __future__ import annotations
 from datetime import date
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from app.schemas.artist import ArtistResponse
 from app.schemas.location import OptionalCoordinates
 from app.schemas.organizer import OrganizerResponse
+from app.services.maps_links import location_maps_url
 
 
 class EventBase(OptionalCoordinates):
@@ -37,6 +38,12 @@ class EventResponse(EventBase):
     organizer: OrganizerResponse
 
     model_config = ConfigDict(from_attributes=True)
+
+    @computed_field
+    @property
+    def maps_url(self) -> str | None:
+        """Link do local para o botão de abrir no Maps, sem exigir localização do usuário."""
+        return location_maps_url(self.latitude, self.longitude, self.event_location)
 
 
 class EventUpdate(OptionalCoordinates):
