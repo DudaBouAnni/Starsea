@@ -1,25 +1,21 @@
 import os
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-load_dotenv()
+from app.database.config import PROJECT_ROOT, database_engine, is_local_database
+
+load_dotenv(PROJECT_ROOT / ".env")
 
 # URL de conexão com o banco de dados
 DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("Defina DATABASE_URL no arquivo .env.")
 
 # Certificado SSL do TiDB
 CA_PATH = os.getenv("CA_PATH")
-
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={
-        "ssl_ca": CA_PATH,
-        "ssl_verify_cert": True,
-        "ssl_verify_identity": True,
-    }
-)
+engine = database_engine(DATABASE_URL, CA_PATH)
+AUTO_CREATE_TABLES = is_local_database(DATABASE_URL)
 
 # Cria a fábrica de sessões locais
 SessionLocal = sessionmaker(

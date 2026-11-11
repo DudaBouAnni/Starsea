@@ -1,14 +1,11 @@
 from datetime import timedelta
-from urllib.parse import parse_qs, urlparse
 
 import pytest
-import requests
 from sqlalchemy import create_engine, inspect, text
 
 from app.database.migrate_nearby import migrate
-from app.models import Event, Notification, User
+from app.models import Event, Notification
 from app.services.geo_service import distance_km, local_today
-from app.services.nearby_service import sync_user_notifications
 
 
 def create_show(client, **changes):
@@ -74,9 +71,9 @@ def test_existing_shows_location_preferences_and_opt_out(client):
 
 def test_nearby_filters_and_sorts_and_does_not_call_google(client, monkeypatch):
     def unexpected(*args, **kwargs):
-        pytest.fail("Nearby discovery should not call Google")
+        pytest.fail("A busca de proximidade deve funcionar sem consultar serviços externos.")
 
-    monkeypatch.setattr("app.services.maps_service.requests.post", unexpected)
+    monkeypatch.setattr("requests.request", unexpected)
     locate(client, 0, 0)
     farther = create_show(client, event_name="Mais distante", latitude=0, longitude=0.2)
     closer = create_show(client, event_name="Mais perto", latitude=0, longitude=0.1)
@@ -119,7 +116,6 @@ def test_expired_show_not_visible(client, db):
     db.commit()
     assert client.get("/users/1/notifications").json() == []
     assert client.get("/users/1/nearby-events").json() == []
-    assert client.get(f"/users/1/events/{show['event_id']}/routes").status_code == 400
 
 
 def test_transaction_does_not_leave_partial_event_or_notices(client, db):
@@ -171,98 +167,6 @@ def test_preferences_and_coordinate_pair_validation(client):
             f"/events/{show['event_id']}", json={"latitude": None, "longitude": None}
         ).status_code
         == 200
-    )
-
-
-def test_maps_without_key_still_returns_links(client):
-    locate(client)
-    show = create_show(client)
-    response = client.get(f"/users/1/events/{show['event_id']}/routes")
-    assert response.status_code == 200, response.text
-    data = response.json()
-    assert data["estimates_for"] == "departure_now"
-    assert len(data["routes"]) == 4
-    for route in data["routes"]:
-        assert route["status"] == "maps_not_configured"
-        assert route["duration_minutes"] is None
-        query = parse_qs(urlparse(route["maps_url"]).query)
-        assert query["api"] == ["1"]
-        assert query["travelmode"] == [route["travel_mode"]]
-
-
-def test_google_modes_estimates_and_no_transit_route(client, monkeypatch):
-    monkeypatch.setenv("GOOGLE_MAPS_API_KEY", "test-key")
-    calls = []
-
-    class Response:
-        def __init__(self, mode):
-            self.mode = mode
-
-        def raise_for_status(self):
-            pass
-
-        def json(self):
-            return (
-                {"routes": []}
-                if self.mode == "TRANSIT"
-                else {"routes": [{"distanceMeters": 12000, "duration": "1800s"}]}
-            )
-
-    def google(url, **kwargs):
-        assert kwargs["headers"]["X-Goog-Api-Key"] == "test-key"
-        assert kwargs["headers"]["X-Goog-FieldMask"] == "routes.distanceMeters,routes.duration"
-        assert kwargs["timeout"] == (3.05, 10)
-        calls.append(kwargs["json"]["travelMode"])
-        return Response(calls[-1])
-
-    monkeypatch.setattr("app.services.maps_service.requests.post", google)
-    locate(client)
-    show = create_show(client)
-    data = client.get(f"/users/1/events/{show['event_id']}/routes?max_distance_km=10").json()
-    assert calls == ["DRIVE", "WALK", "BICYCLE", "TRANSIT"]
-    assert data["routes"][0]["distance_km"] == 12
-    assert data["routes"][0]["duration_minutes"] == 30
-    assert data["routes"][0]["within_distance_limit"] is False
-    assert data["routes"][3]["status"] == "no_route"
-    assert data["routes"][3]["available"] is False
-    assert "test-key" not in str(data)
-
-
-@pytest.mark.parametrize(
-    "failure, status",
-    [
-        (requests.Timeout(), "provider_timeout"),
-        (requests.HTTPError(), "provider_error"),
-        (ValueError(), "invalid_provider_response"),
-    ],
-)
-def test_provider_errors_do_not_break_discovery(client, monkeypatch, failure, status):
-    monkeypatch.setenv("GOOGLE_MAPS_API_KEY", "test-key")
-
-    def failing_provider(*args, **kwargs):
-        raise failure
-
-    monkeypatch.setattr("app.services.maps_service.requests.post", failing_provider)
-    locate(client)
-    show = create_show(client)
-    data = client.get(
-        f"/users/1/events/{show['event_id']}/routes?modes=walking&modes=walking"
-    ).json()
-    assert len(data["routes"]) == 1
-    assert data["routes"][0]["status"] == status
-    assert len(client.get("/users/1/nearby-events").json()) == 1
-
-
-def test_route_validation(client):
-    show = create_show(client, latitude=None, longitude=None)
-    assert client.get(f"/users/1/events/{show['event_id']}/routes").status_code == 400
-    locate(client)
-    assert client.get(f"/users/1/events/{show['event_id']}/routes").status_code == 400
-    assert client.get("/users/1/events/999/routes").status_code == 404
-    assert client.get(f"/users/1/events/{show['event_id']}/routes?modes=plane").status_code == 422
-    assert (
-        client.get(f"/users/1/events/{show['event_id']}/routes?max_distance_km=0").status_code
-        == 422
     )
 
 

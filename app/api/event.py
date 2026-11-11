@@ -1,6 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
@@ -14,8 +15,15 @@ from app.services.event_service import (
     remove_artist_event_service,
     update_event_service,
 )
+from app.services.maps_service import get_event_map_url
 
 router = APIRouter(prefix="/events", tags=["events"])
+
+
+@router.get("/{event_id}/map", response_class=RedirectResponse)
+def open_event_map(event_id: int, db: Session = Depends(get_db)):
+    """Abre o Maps no local do show. A pessoa pode tocar em Rotas no próprio Maps."""
+    return RedirectResponse(get_event_map_url(event_id, db), status_code=307)
 
 
 # Cria um evento

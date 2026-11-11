@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
 from app.schemas.music import MusicProfile, RecommendedEvent
-from app.services.maps_service import maps_url
+from app.services.maps_service import event_map_url
 from app.services.music_match_service import has_music_match, matched_artists, matched_genres
 from app.services.music_service import (
     get_music_profile,
@@ -70,7 +70,7 @@ def recommended_events(
         RecommendedEvent(
             event=event,
             distance_km=round(distance, 2),
-            maps_url=maps_url(user, event),
+            maps_url=event_map_url(event),
             matched_artists=matched_artists(user, event),
             matched_genres=matched_genres(user, event),
             match_reasons=(["artist"] if matched_artists(user, event) else [])

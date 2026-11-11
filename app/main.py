@@ -12,13 +12,14 @@ from fastapi import FastAPI
 
 from app.api.router import API_ROUTERS
 from app.database.base import Base
-from app.database.session import engine
+from app.database.session import AUTO_CREATE_TABLES, engine
 
 # Cria a instância do FastAPI
 app = FastAPI(title="Starsea API", description="API for managing Starsea entities", version="1.0.0")
 
-# Cria as tabelas que ainda não existem no banco
-Base.metadata.create_all(bind=engine)
+# Em bancos compartilhados, as migrações devem ser executadas separadamente.
+if AUTO_CREATE_TABLES:
+    Base.metadata.create_all(bind=engine)
 
 # Registra as rotas da aplicação
 for router in API_ROUTERS:
