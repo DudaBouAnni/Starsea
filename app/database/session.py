@@ -11,7 +11,10 @@ load_dotenv(PROJECT_ROOT / ".env")
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("Defina DATABASE_URL no arquivo .env.")
-engine = database_engine(DATABASE_URL, os.getenv("CA_PATH"))
+
+# Certificado SSL do TiDB
+CA_PATH = os.getenv("CA_PATH")
+engine = database_engine(DATABASE_URL, CA_PATH)
 AUTO_CREATE_TABLES = is_local_database(DATABASE_URL)
 
 # Cria a fábrica de sessões locais
