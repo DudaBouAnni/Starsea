@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+
 from app.exceptions.BadRequestException import BadRequestException
 from app.exceptions.ConflictException import ConflictException
 from app.exceptions.NotFoundException import NotFoundException
@@ -6,8 +7,10 @@ from app.models import Event
 from app.models.genre import Genre
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.services.nearby_service import sync_user_notifications
 
-#Create User
+
+# Cria um usuário
 def create_user_service(user: UserCreate, db: Session):
     exists = db.query(User).filter(User.email == user.email).first()
 
@@ -15,24 +18,26 @@ def create_user_service(user: UserCreate, db: Session):
         raise ConflictException("Email already registered")
 
     db_user = User(
-        username = user.username,
-        email = user.email,
+        username=user.username,
+        email=user.email,
         user_password=user.user_password,
-        profile_image = user.profile_image or "",
-        country = user.country or ""
+        profile_image=user.profile_image or "",
+        country=user.country or "",
     )
 
-    db.add(db_user),
-    db.commit(),
+    (db.add(db_user),)
+    (db.commit(),)
     db.refresh(db_user)
 
     return db_user
 
-#Lists Users
+
+# Lista os usuários
 def list_users_service(db: Session):
     return db.query(User).all()
 
-#Add Genre to User
+
+# Adiciona um gênero ao usuário
 def add_genre_user_service(user_id: int, genre_id: int, db: Session):
     user = db.get(User, user_id)
     genre = db.get(Genre, genre_id)
@@ -44,12 +49,14 @@ def add_genre_user_service(user_id: int, genre_id: int, db: Session):
         raise ConflictException("Genre already exists")
 
     user.genres.append(genre)
-
+    user.personalized_notifications_only = True
+    sync_user_notifications(user, db)
     db.commit()
 
     return {"message": "Genre added successfully!"}
 
-#Get User Genres
+
+# Consulta os gêneros do usuário
 def get_user_genres_service(user_id: int, db: Session):
     user = db.get(User, user_id)
 
@@ -58,7 +65,8 @@ def get_user_genres_service(user_id: int, db: Session):
 
     return user.genres
 
-#Add Event to User
+
+# Adiciona um evento ao usuário
 def add_event_user_service(user_id: int, event_id: int, db: Session):
     user = db.get(User, user_id)
     event = db.get(Event, event_id)
@@ -75,7 +83,8 @@ def add_event_user_service(user_id: int, event_id: int, db: Session):
 
     return {"message": "Event added successfully!"}
 
-#Get User Events
+
+# Consulta os eventos do usuário
 def get_user_events_service(user_id: int, db: Session):
     user = db.get(User, user_id)
 
@@ -84,7 +93,8 @@ def get_user_events_service(user_id: int, db: Session):
 
     return user.events
 
-#Update User
+
+# Atualiza o usuário
 def update_user_service(user_id: int, updated_data: UserUpdate, db: Session):
     user = db.get(User, user_id)
 
@@ -101,7 +111,8 @@ def update_user_service(user_id: int, updated_data: UserUpdate, db: Session):
 
     return user
 
-#Delete User
+
+# Exclui o usuário
 def delete_user_service(user_id: int, db: Session):
     user = db.get(User, user_id)
 
@@ -116,7 +127,8 @@ def delete_user_service(user_id: int, db: Session):
 
     return {"message": "User deleted successfully!"}
 
-#Delete User Genre
+
+# Remove um gênero do usuário
 def delete_genre_user_service(user_id: int, genere_id: int, db: Session):
     user = db.get(User, user_id)
     genre = db.get(Genre, genere_id)
@@ -128,7 +140,7 @@ def delete_genre_user_service(user_id: int, genere_id: int, db: Session):
         raise BadRequestException("Genre not linked")
 
     user.genres.remove(genre)
-
+    sync_user_notifications(user, db)
     db.commit()
 
     return {"message": "Genre unfavorited successfully!"}

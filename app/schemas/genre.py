@@ -1,31 +1,37 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
 
 class GenreBase(BaseModel):
     """
-    Base genre schema.
+    Esquema base de gênero.
 
-    Contains the fields used in genre creation, response, and update schemas.
+    Define os campos utilizados na criação, nas respostas e na atualização de gêneros.
     """
+
     genre_name: str
+
 
 class GenreCreate(GenreBase):
-    #Schema used to create a genre.
+    # Esquema de dados para criar um gênero.
     genre_name: str
 
+
 class GenreResponse(GenreBase):
-    #Schema used when requesting genre information.
+    # Esquema de resposta com os dados do gênero.
     genre_id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 class GenreUpdate(BaseModel):
     """
-    Schema used to update an existing genre.
-    All fields are optional.
+    Esquema para atualizar um gênero existente.
+    Todos os campos são opcionais.
     """
+
     genre_name: Optional[str] = None
+
 
 GenreResponse.model_rebuild()

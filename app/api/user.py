@@ -1,169 +1,147 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.database.session import SessionLocal
+
+from app.api.dependencies import get_db
 from app.schemas.user import UserCreate, UserResponse, UserUpdate
-from app.services.user_service import create_user_service, list_users_service, add_genre_user_service, \
-    get_user_genres_service, add_event_user_service, get_user_events_service, update_user_service, delete_user_service, \
-    delete_genre_user_service
+from app.services.user_service import (
+    add_event_user_service,
+    add_genre_user_service,
+    create_user_service,
+    delete_genre_user_service,
+    delete_user_service,
+    get_user_events_service,
+    get_user_genres_service,
+    list_users_service,
+    update_user_service,
+)
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
-#Creates user
+# Cria um usuário
 @router.post("/", response_model=UserResponse)
-def create_user(
-        user: UserCreate,
-        db: Session = Depends(get_db)):
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
     """
-       Creates a user in the DB:
+    Cria um usuário no banco de dados.
 
-        - **username**: receives username
-        - **email**: receives user email
-        - **username_password**: receives user password
-
+    - **username**: nome do usuário.
+    - **email**: e-mail do usuário.
+    - **username_password**: senha do usuário.
     """
 
     return create_user_service(user, db)
 
-#Lists all users
+
+# Lista os usuários
 @router.get("/", response_model=list[UserResponse])
-def list_users(
-        db: Session = Depends(get_db)):
+def list_users(db: Session = Depends(get_db)):
     """
-        Returns all users in the DB:
+    Retorna os usuários cadastrados no banco.
 
-        - **user_id**: returns user ID
-        - **username**: returns username
-        - **email**: returns user email
-
+    - **user_id**: identificador do usuário.
+    - **username**: nome do usuário.
+    - **email**: e-mail do usuário.
     """
 
     return list_users_service(db)
 
-#Adds genre to user
+
+# Adiciona um gênero ao usuário
 @router.post("/{user_id}/genres/{genre_id}")
-def add_genre_user(
-        user_id: int,
-        genre_id: int,
-        db: Session = Depends(get_db)):
+def add_genre_user(user_id: int, genre_id: int, db: Session = Depends(get_db)):
     """
-        Adds new genre to the user:
+    Adiciona um gênero à lista de gêneros do usuário.
 
-        - **user_id**: receives user ID
-        - **genre_id**: receives genre ID
+    - **user_id**: identificador do usuário.
+    - **genre_id**: identificador do gênero.
 
-        Finds the user by its ID, then finds the by its ID and adds it to the user's genre list
+    Localiza os registros pelos identificadores e cria a associação.
     """
 
-    return add_genre_user_service()
+    return add_genre_user_service(user_id, genre_id, db)
 
-#Returns all genres from a user
+
+# Retorna os gêneros do usuário
 @router.get("/{user_id}/genres")
-def get_user_genres(
-        user_id: int,
-        db: Session = Depends(get_db)):
+def get_user_genres(user_id: int, db: Session = Depends(get_db)):
     """
-        Returns all genres from a user:
+    Retorna os gêneros do usuário.
 
-        - **user_id**: receives user ID
+    - **user_id**: identificador do usuário.
 
-        Finds user by its ID and returns the user's genre list.
-
+    Localiza o usuário pelo identificador e retorna sua lista de gêneros.
     """
 
     return get_user_genres_service(user_id, db)
 
-#Adds events to a user
+
+# Adiciona um evento ao usuário
 @router.post("/{user_id}/events/{event_id}")
-def add_event_user(
-        user_id: int,
-        event_id: int,
-        db: Session = Depends(get_db)):
+def add_event_user(user_id: int, event_id: int, db: Session = Depends(get_db)):
     """
-        Adds new event to a user:
+    Adiciona um evento à lista do usuário.
 
-        - **user_id**: receives user ID
-        - **event_id**: receives event ID
+    - **user_id**: identificador do usuário.
+    - **event_id**: identificador do evento.
 
-        Finds the user by its ID, then finds the event by its ID and adds it to the user's event list
-
+    Localiza os registros e associa o evento ao usuário.
     """
 
     return add_event_user_service(user_id, event_id, db)
 
-#Returns all events from a user
+
+# Retorna os eventos do usuário
 @router.get("/{user_id}/events")
-def get_user_events(
-        user_id: int,
-        db: Session = Depends(get_db)):
-
+def get_user_events(user_id: int, db: Session = Depends(get_db)):
     """
-        Returns all events from a user:
+    Retorna os eventos do usuário.
 
-        - **user_id**: receives user ID
+    - **user_id**: identificador do usuário.
 
-        Finds user by its ID and returns the user's event list
-
+    Localiza o usuário pelo identificador e retorna sua lista de eventos.
     """
 
     return get_user_events_service(user_id, db)
 
-#Updates user
+
+# Atualiza o usuário
 @router.patch("/{user_id}")
-def update_user(
-    user_id: int,
-    updated_data: UserUpdate,
-    db: Session = Depends(get_db)):
-
+def update_user(user_id: int, updated_data: UserUpdate, db: Session = Depends(get_db)):
     """
-        Updates user:
+    Atualiza os dados do usuário.
 
-        - **user_id**: receives user ID
+    - **user_id**: identificador do usuário.
 
-        Finds user by its id and allows updating its data
-
+    Localiza o usuário pelo identificador e permite atualizar seus dados.
     """
 
     return update_user_service(user_id, updated_data, db)
 
-#Delete user
+
+# Exclui o usuário
 @router.delete("/{user_id}")
-def delete_user(
-        user_id: int,
-        db: Session = Depends(get_db)):
-
+def delete_user(user_id: int, db: Session = Depends(get_db)):
     """
-        Deletes user from the DB:
+    Exclui o usuário do banco de dados.
 
-        - **user_id**: receives user ID
+    - **user_id**: identificador do usuário.
 
-        Finds user by its ID and deletes it from the DB
-
+    Localiza o usuário pelo identificador e remove seu registro.
     """
 
     return delete_user_service(user_id, db)
 
-#Deletes a genre from a user
+
+# Remove um gênero do usuário
 @router.delete("/{user_id}/genres/{genere_id}")
-def delete_genre_user(
-        user_id: int,
-        genere_id: int,
-        db: Session = Depends(get_db)):
-
+def delete_genre_user(user_id: int, genere_id: int, db: Session = Depends(get_db)):
     """
-        Deleta um gênero de um usuário:
+    Remove um gênero do usuário.
 
-        - **user_id**: receives user ID
-        - **genre_id**: receives genre ID
+    - **user_id**: identificador do usuário.
+    - **genre_id**: identificador do gênero.
 
-        Finds user by its ID, finds genre by its ID, and removes it from the user's genre list
-
+    Localiza os registros e remove o gênero da lista de preferências do usuário.
     """
 
     return delete_genre_user_service(user_id, genere_id, db)

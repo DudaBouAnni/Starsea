@@ -2,10 +2,8 @@ from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 """
-Base class for all SQLAlchemy models.
+Classe base de todos os modelos SQLAlchemy.
 
-All entities must inherit from this class.
-It provides what is necessary for classes to be mapped
-to database tables, allowing creating, querying, updating, and
-deleting records using SQLAlchemy.
+Todas as entidades devem herdar desta classe.
+Permite mapear classes para tabelas e criar, consultar, atualizar e excluir registros.
 """

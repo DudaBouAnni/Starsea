@@ -5,7 +5,8 @@ from app.exceptions.NotFoundException import NotFoundException
 from app.models import Organizer
 from app.schemas.organizer import OrganizerCreate, OrganizerUpdate
 
-#Create Organizer
+
+# Cria um organizador
 def create_organizer_service(organizer: OrganizerCreate, db: Session):
     exists = db.query(Organizer).filter_by(organizer_name=organizer.organizer_name).first()
 
@@ -21,11 +22,13 @@ def create_organizer_service(organizer: OrganizerCreate, db: Session):
 
     return db_organizer
 
-#List Organizers
+
+# Lista os organizadores
 def list_organizers_service(db: Session):
     return db.query(Organizer).all()
 
-#Get Organizer Events
+
+# Consulta os eventos do organizador
 def get_organizer_events_service(organizer_id: int, db: Session):
     organizer = db.get(Organizer, organizer_id)
 
@@ -42,7 +45,8 @@ def get_organizer_events_service(organizer_id: int, db: Session):
 
     return organizer
 
-#Update Organizer
+
+# Atualiza o organizador
 def update_organizer_service(organizer_id: int, updated_data: OrganizerUpdate, db: Session):
     organizer = db.get(Organizer, organizer_id)
 
@@ -59,7 +63,8 @@ def update_organizer_service(organizer_id: int, updated_data: OrganizerUpdate, d
 
         return organizer
 
-#Delete Organizer
+
+# Exclui o organizador
 def delete_organizer_service(organizer_id: int, db: Session):
     organizer = db.get(Organizer, organizer_id)
 

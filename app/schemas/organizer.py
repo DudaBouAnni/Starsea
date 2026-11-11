@@ -1,31 +1,37 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
 
 class OrganizerBase(BaseModel):
     """
-    Base organizer schema.
+    Esquema base de organizador.
 
-    Contains the fields used in organizer creation, response, and update schemas.
+    Define os campos utilizados na criação, nas respostas e na atualização de organizadores.
     """
+
     organizer_name: str
+
 
 class OrganizerCreate(OrganizerBase):
-    #Schema used to create an organizer.
+    # Esquema de dados para criar um organizador.
     organizer_name: str
 
+
 class OrganizerResponse(OrganizerBase):
-    #Schema used when requesting organizer information.
+    # Esquema de resposta com os dados do organizador.
     organizer_id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 class OrganizerUpdate(BaseModel):
     """
-    Schema used to update an existing organizer.
-    All fields are optional.
+    Esquema para atualizar um organizador existente.
+    Todos os campos são opcionais.
     """
+
     organizer_name: Optional[str] = None
+
 
 OrganizerResponse.model_rebuild()

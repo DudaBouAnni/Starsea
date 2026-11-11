@@ -1,15 +1,17 @@
-# Python
+# Arquivos gerados pelo Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Env
+# Ambiente e variáveis locais
 .env
 .venv/
 
-# IDE
+# Configurações do ambiente de desenvolvimento
 .idea/
 
-# DB local
+# Banco de dados e arquivos locais
 starsea.db
+.pytest_cache/
+.runtime/
