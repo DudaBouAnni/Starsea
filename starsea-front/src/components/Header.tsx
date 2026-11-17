@@ -1,43 +1,73 @@
-import { Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-export function Header() {
+interface HeaderProps {
+  currentPage?: string;
+}
+
+export function Header({ currentPage }: HeaderProps) {
+  const { isAuthenticated, user, logout } = useAuth();
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">S</span>
-            </div>
-            <span className="text-xl font-bold text-white">Starsea</span>
-          </div>
+    <header className="bg-[#1a1a1a] text-white py-4 px-8 flex items-center justify-between">
+      <Link to="/" className="flex items-center gap-3">
+        <img
+          src="/sea-logo.png"
+          alt="Logo"
+          className="h-24 w-auto max-w-[340px] object-contain sm:h-28 sm:max-w-[400px] lg:h-32 lg:max-w-[450px]"
+        />
+      </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
-            <button className="flex items-center gap-2 text-white/80 hover:text-white transition">
-              <Search className="w-5 h-5" />
-            </button>
-            <a href="#eventos" className="text-white/80 hover:text-white transition">
-              Eventos
-            </a>
-            <a href="#generos" className="text-white/80 hover:text-white transition">
-              Gêneros
-            </a>
-            <span className="text-white/40">|</span>
-            <a href="#login" className="text-white/80 hover:text-white transition">
-              Fazer login
-            </a>
-            <button className="px-6 py-2 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 text-white font-medium hover:opacity-90 transition">
-              Cadastre-se
-            </button>
-          </nav>
+      <nav className="flex items-center gap-8">
+        <Link 
+          to="/events" 
+          className={currentPage === 'events' ? 'text-cyan-400' : 'text-gray-300 hover:text-white'}
+        >
+          Eventos
+        </Link>
+        <Link 
+          to="/genres" 
+          className={currentPage === 'genres' ? 'text-cyan-400' : 'text-gray-300 hover:text-white'}
+        >
+          Gêneros
+        </Link>
+        <Link 
+          to="/locais" 
+          className={currentPage === 'locais' ? 'text-cyan-400' : 'text-gray-300 hover:text-white'}
+        >
+          Locais
+        </Link>
+        <Link 
+          to="/tickets" 
+          className={currentPage === 'tickets' ? 'text-cyan-400' : 'text-gray-300 hover:text-white'}
+        >
+          Ingressos
+        </Link>
 
-          <button className="md:hidden text-white">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
-      </div>
+        {isAuthenticated ? (
+          <>
+            <Link 
+              to="/profile" 
+              className={currentPage === 'profile' ? 'text-cyan-400' : 'text-gray-300 hover:text-white'}
+            >
+              {user?.name || 'Perfil'}
+            </Link>
+            <button
+              onClick={logout}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg font-medium text-white text-sm transition"
+            >
+              Sair
+            </button>
+          </>
+        ) : (
+          <Link 
+            to="/login" 
+            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-cyan-400 rounded-lg font-bold hover:opacity-90"
+          >
+            Entrar
+          </Link>
+        )}
+      </nav>
     </header>
   );
 }
